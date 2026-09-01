@@ -1,6 +1,6 @@
 # Utilities Scarce
 
-A client-side Fabric mod for **Minecraft 26.2** with five combat utility modules.
+A client-side Fabric mod for **Minecraft 26.2** with six utility modules.
 Everything is configurable from Mod Menu and every module has its own toggle hotkey.
 
 ## Modules
@@ -41,6 +41,29 @@ mace, lands one hit, and returns to the weapon that started the trade.
 `Require Breach` and `Minimum Breach level` control which mace qualifies; the trigger
 weapons (sword, axe) can be enabled independently.
 
+### Free Cam
+Detaches the camera from your body without moving your body.
+
+The player entity is never touched — it keeps its position and, crucially, its pitch
+and yaw. So if you were aiming down mining a shaft when you turned Free Cam on,
+**holding the attack key keeps breaking that same column** while you fly around
+looking at something else. Everything the game aims — block breaking, placing,
+attacks, the block outline — still comes off the body, because vanilla ray-traces
+from the player and the player has not moved.
+
+Two things have to be taken away from the body for that to hold. Movement keys are
+cut off by swapping the player's input handler for a blank one that never reads the
+keyboard; the real handler is put back on exit. Mouse look is intercepted and applied
+to the camera instead. The body is left standing exactly where you left it, still
+subject to gravity and still mining.
+
+WASD flies the camera, jump/sneak go up and down, sprint applies the speed multiplier.
+`Fly along look direction` is off by default so movement stays level and you can look
+down at your body while flying sideways. `Max distance from body` leashes the camera
+(0 is unlimited — past the loaded chunks there is nothing to see). `Snap back on damage`
+is on by default, so a mob or a lava pocket drops you back into your body rather than
+letting you die watching scenery.
+
 ### Fast Anchor
 Charges a respawn anchor the moment you place one, then puts a totem back in your hand.
 
@@ -59,6 +82,12 @@ Every module runs its steps through one scheduler with a shared per-tick budget
 steps such as picking a hotbar slot are free. Hotbar changes rely on the game's own
 held-item sync, which is flushed before the next attack or use, so a swap-and-hit still
 lands with the new item without any extra packets of our own.
+
+Free Cam is the one module that needs mixins: the camera position and mouse look have
+no event hooks. It uses two, both narrow — one on `Camera` (place the camera, and turn
+off occlusion culling, which is computed from the player's position and would otherwise
+hide most of what you flew out to look at) and one on `MouseHandler` (send look input to
+the camera). The other five modules use Fabric API events only.
 
 Sequences from different modules share a single "hand" lane, so a new sequence cancels
 the previous one rather than two modules fighting over the hotbar. Priority on an
@@ -80,6 +109,7 @@ Defaults sit on the numeric keypad, which vanilla leaves unbound. Rebind them in
 | `Keypad 3` | Toggle Shield Disable |
 | `Keypad 4` | Toggle Breach Swap |
 | `Keypad 5` | Toggle Fast Anchor |
+| `Keypad 6` | Toggle Free Cam |
 
 Toggling writes straight to the config file, so hotkeys and the settings screen always
 agree.
@@ -98,7 +128,7 @@ agree.
 Both optional mods are compile-only. Without them the mod still runs and the hotkeys
 still work; you just edit `config/utilitiesscarce.json` by hand instead.
 
-Only Auto Totem is enabled out of the box. The other four default to off — turn on what
+Only Auto Totem is enabled out of the box. The other five default to off — turn on what
 you want in the settings screen or with the hotkeys.
 
 ## Building

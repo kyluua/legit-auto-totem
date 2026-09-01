@@ -14,6 +14,7 @@ public final class UtilitiesScarceConfig {
 	public ShieldDisable shieldDisable = new ShieldDisable();
 	public BreachSwap breachSwap = new BreachSwap();
 	public FastAnchor fastAnchor = new FastAnchor();
+	public FreeCam freeCam = new FreeCam();
 
 	/** How an item is pulled out of the inventory into a hand slot. */
 	public enum SwapMethod {
@@ -140,6 +141,23 @@ public final class UtilitiesScarceConfig {
 		public boolean restoreSlot = true;
 		public int restoreDelayTicks = 2;
 		public boolean moveToHotbar = false;
+	}
+
+	public static final class FreeCam {
+		public boolean enabled = false;
+		/** Camera speed in blocks per tick. 0.8 is roughly 16 blocks a second. */
+		public double moveSpeed = 0.8D;
+		/** Speed multiplier while the sprint key is held. */
+		public double sprintMultiplier = 3.0D;
+		/**
+		 * Fly along the look direction instead of level. Off keeps movement
+		 * flat so you can look down at your body while flying sideways.
+		 */
+		public boolean followPitch = false;
+		/** Maximum distance the camera may stray from the body; 0 is unlimited. */
+		public double maxDistance = 0.0D;
+		/** Snap back to the body when something hurts you. */
+		public boolean disableOnDamage = true;
 	}
 
 	public static final class FastAnchor {

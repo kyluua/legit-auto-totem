@@ -1,7 +1,9 @@
 package dev.kyluua.utilitiesscarce.module;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.util.ActionScheduler;
@@ -26,9 +28,12 @@ public final class ModuleManager {
 	private final ShieldDisableModule shieldDisable;
 	private final BreachSwapModule breachSwap;
 	private final FastAnchorModule fastAnchor;
+	private final FreeCamModule freeCam;
 
 	private final List<Module> modules = new ArrayList<>();
 	private final List<Module> attackPriority = new ArrayList<>();
+	/** Last seen enabled state, so a module switched off anywhere gets cleaned up. */
+	private final Map<Module, Boolean> wasEnabled = new IdentityHashMap<>();
 
 	private boolean inWorld;
 
@@ -38,12 +43,14 @@ public final class ModuleManager {
 		shieldDisable = new ShieldDisableModule(scheduler);
 		breachSwap = new BreachSwapModule(scheduler);
 		fastAnchor = new FastAnchorModule(scheduler);
+		freeCam = new FreeCamModule(scheduler);
 
 		modules.add(autoTotem);
 		modules.add(stunSlam);
 		modules.add(shieldDisable);
 		modules.add(breachSwap);
 		modules.add(fastAnchor);
+		modules.add(freeCam);
 
 		attackPriority.add(stunSlam);
 		attackPriority.add(shieldDisable);
@@ -71,12 +78,27 @@ public final class ModuleManager {
 
 		inWorld = true;
 
-		if (!ConfigManager.get().general.pauseWhenScreenOpen || minecraft.gui.screen() == null) {
-			for (Module module : modules) {
-				if (module.isEnabled()) {
-					module.onTick(minecraft);
+		boolean paused = ConfigManager.get().general.pauseWhenScreenOpen && minecraft.gui.screen() != null;
+
+		for (Module module : modules) {
+			boolean enabled = module.isEnabled();
+			boolean previously = Boolean.TRUE.equals(wasEnabled.put(module, enabled));
+
+			if (!enabled) {
+				// Covers being switched off from the settings screen, where no
+				// hotkey ran to tidy up after the module.
+				if (previously) {
+					module.onStop();
 				}
+
+				continue;
 			}
+
+			if (paused && !module.runsWhileScreenOpen()) {
+				continue;
+			}
+
+			module.onTick(minecraft);
 		}
 
 		scheduler.tick(ConfigManager.get().general.maxActionsPerTick);
@@ -111,6 +133,7 @@ public final class ModuleManager {
 	/** Drops any in-flight sequence, e.g. on disconnect. */
 	public void stopAll() {
 		scheduler.clear();
+		wasEnabled.clear();
 
 		for (Module module : modules) {
 			module.onStop();

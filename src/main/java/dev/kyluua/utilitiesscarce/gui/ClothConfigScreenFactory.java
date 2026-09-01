@@ -38,6 +38,7 @@ public final class ClothConfigScreenFactory {
 		addShieldDisable(builder, entries, config);
 		addBreachSwap(builder, entries, config);
 		addFastAnchor(builder, entries, config);
+		addFreeCam(builder, entries, config);
 
 		return builder.build();
 	}
@@ -338,6 +339,47 @@ public final class ClothConfigScreenFactory {
 		category.addEntry(entries.startBooleanToggle(option("move_to_hotbar"), module.moveToHotbar)
 				.setDefaultValue(false)
 				.setSaveConsumer(value -> module.moveToHotbar = value)
+				.build());
+	}
+
+	private static void addFreeCam(ConfigBuilder builder, ConfigEntryBuilder entries,
+			UtilitiesScarceConfig config) {
+		ConfigCategory category = category(builder, "text.utilitiesscarce.module.free_cam");
+		UtilitiesScarceConfig.FreeCam module = config.freeCam;
+
+		category.addEntry(entries.startBooleanToggle(option("enabled"), module.enabled)
+				.setDefaultValue(false)
+				.setTooltip(Component.literal(
+						"Your body stays put and keeps aiming where it was, so it carries on mining."))
+				.setSaveConsumer(value -> module.enabled = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("move_speed"), module.moveSpeed)
+				.setDefaultValue(0.8D)
+				.setSaveConsumer(value -> module.moveSpeed = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("sprint_multiplier"), module.sprintMultiplier)
+				.setDefaultValue(3.0D)
+				.setSaveConsumer(value -> module.sprintMultiplier = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("follow_pitch"), module.followPitch)
+				.setDefaultValue(false)
+				.setTooltip(Component.literal(
+						"Off keeps movement level so you can look down while flying sideways."))
+				.setSaveConsumer(value -> module.followPitch = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("max_distance"), module.maxDistance)
+				.setDefaultValue(0.0D)
+				.setTooltip(Component.literal("0 is unlimited. Beyond loaded chunks there is nothing to see."))
+				.setSaveConsumer(value -> module.maxDistance = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("disable_on_damage"), module.disableOnDamage)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> module.disableOnDamage = value)
 				.build());
 	}
 

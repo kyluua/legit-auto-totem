@@ -6,24 +6,22 @@
 	"key.utilitiesscarce.toggle_shield_disable": "Toggle Shield Disable",
 	"key.utilitiesscarce.toggle_breach_swap": "Toggle Breach Swap",
 	"key.utilitiesscarce.toggle_fast_anchor": "Toggle Fast Anchor",
-
+	"key.utilitiesscarce.toggle_free_cam": "Toggle Free Cam",
 	"text.utilitiesscarce.title": "Utilities Scarce",
 	"text.utilitiesscarce.toggled_on": "%s enabled",
 	"text.utilitiesscarce.toggled_off": "%s disabled",
-
 	"text.utilitiesscarce.module.auto_totem": "Auto Totem",
 	"text.utilitiesscarce.module.stun_slam": "Stun Slam",
 	"text.utilitiesscarce.module.shield_disable": "Shield Disable",
 	"text.utilitiesscarce.module.breach_swap": "Breach Swap",
 	"text.utilitiesscarce.module.fast_anchor": "Fast Anchor",
-
+	"text.utilitiesscarce.module.free_cam": "Free Cam",
 	"text.utilitiesscarce.category.general": "General",
 	"text.utilitiesscarce.option.enabled": "Enabled",
 	"text.utilitiesscarce.option.notify_on_toggle": "Announce hotkey toggles",
 	"text.utilitiesscarce.option.notify_on_action": "Announce module actions",
 	"text.utilitiesscarce.option.max_actions_per_tick": "Max actions per tick",
 	"text.utilitiesscarce.option.pause_when_screen_open": "Pause while a screen is open",
-
 	"text.utilitiesscarce.option.refill_offhand": "Refill offhand",
 	"text.utilitiesscarce.option.refill_hotbar": "Refill hotbar",
 	"text.utilitiesscarce.option.require_recent_damage": "Only after a pop",
@@ -32,7 +30,6 @@
 	"text.utilitiesscarce.option.keep_in_reserve": "Keep in reserve",
 	"text.utilitiesscarce.option.swap_method": "Swap method",
 	"text.utilitiesscarce.option.search_order": "Search order",
-
 	"text.utilitiesscarce.option.trigger_mode": "Trigger",
 	"text.utilitiesscarce.option.require_blocking": "Require raised shield",
 	"text.utilitiesscarce.option.players_only": "Players only",
@@ -44,15 +41,18 @@
 	"text.utilitiesscarce.option.axe_delay_ticks": "Axe delay (ticks)",
 	"text.utilitiesscarce.option.mace_delay_ticks": "Mace delay (ticks)",
 	"text.utilitiesscarce.option.move_to_hotbar": "Pull tools from inventory",
-
 	"text.utilitiesscarce.option.require_breach": "Require Breach",
 	"text.utilitiesscarce.option.min_breach_level": "Minimum Breach level",
 	"text.utilitiesscarce.option.trigger_with_sword": "Trigger from swords",
 	"text.utilitiesscarce.option.trigger_with_axe": "Trigger from axes",
-
 	"text.utilitiesscarce.option.charges": "Glowstone charges",
 	"text.utilitiesscarce.option.charge_delay_ticks": "Charge delay (ticks)",
 	"text.utilitiesscarce.option.swap_delay_ticks": "Swap delay (ticks)",
 	"text.utilitiesscarce.option.swap_target": "Swap to",
-	"text.utilitiesscarce.option.only_where_explosive": "Only where anchors explode"
+	"text.utilitiesscarce.option.only_where_explosive": "Only where anchors explode",
+	"text.utilitiesscarce.option.move_speed": "Camera speed (blocks/tick)",
+	"text.utilitiesscarce.option.sprint_multiplier": "Sprint multiplier",
+	"text.utilitiesscarce.option.follow_pitch": "Fly along look direction",
+	"text.utilitiesscarce.option.max_distance": "Max distance from body",
+	"text.utilitiesscarce.option.disable_on_damage": "Snap back on damage"
 }

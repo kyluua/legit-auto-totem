@@ -3,7 +3,7 @@
 	"id": "utilitiesscarce",
 	"version": "${version}",
 	"name": "Utilities Scarce",
-	"description": "Client-side combat utility modules: Auto Totem, Stun Slam, Shield Disable, Breach Swap and Fast Anchor. Every module is configurable and hotkey-toggleable.",
+	"description": "Client-side utility modules: Auto Totem, Stun Slam, Shield Disable, Breach Swap, Fast Anchor and Free Cam. Every module is configurable and hotkey-toggleable.",
 	"authors": [
 		"kyluua"
 	],
@@ -21,6 +21,12 @@
 			"dev.kyluua.utilitiesscarce.gui.ModMenuIntegration"
 		]
 	},
+	"mixins": [
+		{
+			"config": "utilitiesscarce.mixins.json",
+			"environment": "client"
+		}
+	],
 	"depends": {
 		"fabricloader": ">=${loader_version}",
 		"minecraft": "~${minecraft_version}",

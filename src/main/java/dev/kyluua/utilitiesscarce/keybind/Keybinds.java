@@ -28,7 +28,8 @@ public final class Keybinds {
 			GLFW.GLFW_KEY_KP_2,
 			GLFW.GLFW_KEY_KP_3,
 			GLFW.GLFW_KEY_KP_4,
-			GLFW.GLFW_KEY_KP_5
+			GLFW.GLFW_KEY_KP_5,
+			GLFW.GLFW_KEY_KP_6
 	};
 
 	private static final Map<String, KeyMapping> TOGGLES = new LinkedHashMap<>();

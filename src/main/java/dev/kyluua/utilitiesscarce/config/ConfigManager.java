@@ -116,6 +116,10 @@ public final class ConfigManager {
 			target.fastAnchor = new UtilitiesScarceConfig.FastAnchor();
 		}
 
+		if (target.freeCam == null) {
+			target.freeCam = new UtilitiesScarceConfig.FreeCam();
+		}
+
 		// Gson maps an unrecognised enum name to null rather than failing.
 		if (target.autoTotem.swapMethod == null) {
 			target.autoTotem.swapMethod = UtilitiesScarceConfig.SwapMethod.SWAP;

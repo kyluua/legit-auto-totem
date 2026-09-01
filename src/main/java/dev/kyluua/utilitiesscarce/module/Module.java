@@ -46,6 +46,15 @@ public abstract class Module {
 	}
 
 	/**
+	 * Whether this module keeps ticking while a screen is open, regardless of
+	 * the global pause setting. Only Free Cam needs it: giving up the camera
+	 * the moment you open chat would be worse than useless.
+	 */
+	public boolean runsWhileScreenOpen() {
+		return false;
+	}
+
+	/**
 	 * Called when the player attacks an entity.
 	 *
 	 * @return {@code true} if this module started a sequence and therefore owns
