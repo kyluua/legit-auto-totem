@@ -1,1 +1,1 @@
-# legit-auto-totem
+# Utilities Scarce
