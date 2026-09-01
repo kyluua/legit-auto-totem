@@ -57,7 +57,10 @@ keyboard; the real handler is put back on exit. Mouse look is intercepted and ap
 to the camera instead. The body is left standing exactly where you left it, still
 subject to gravity and still mining.
 
-WASD flies the camera, jump/sneak go up and down, sprint applies the speed multiplier.
+Flying uses your own movement keybinds — the camera is driven by the player's input
+handler rather than by a second set of controls, so rebinding forward/back/left/right
+in Options → Controls moves the camera too, and toggle-sneak and controller mods carry
+over. Jump and sneak go up and down, sprint applies the speed multiplier.
 `Fly along look direction` is off by default so movement stays level and you can look
 down at your body while flying sideways. `Max distance from body` leashes the camera
 (0 is unlimited — past the loaded chunks there is nothing to see). `Snap back on damage`

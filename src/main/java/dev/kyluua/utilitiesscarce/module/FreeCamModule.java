@@ -10,6 +10,7 @@ import net.minecraft.client.Options;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -149,9 +150,15 @@ public final class FreeCamModule extends Module {
 		savedInput = null;
 	}
 
-	private static Vec3 readMovement(Options options, UtilitiesScarceConfig.FreeCam config) {
-		double forward = axis(options.keyUp.isDown(), options.keyDown.isDown());
-		double strafe = axis(options.keyRight.isDown(), options.keyLeft.isDown());
+	private Vec3 readMovement(Options options, UtilitiesScarceConfig.FreeCam config) {
+		// Horizontal movement comes off the player's own input handler rather
+		// than off raw key checks, so it follows whatever the movement keys are
+		// bound to and picks up anything else that feeds that handler: toggle
+		// sneak, analog sticks from controller mods, and so on. The vector
+		// counts left as positive, hence the flip.
+		Vec2 move = movementInput();
+		double forward = move.y;
+		double strafe = -move.x;
 		double vertical = axis(options.keyJump.isDown(), options.keyShift.isDown());
 
 		if (forward == 0.0D && strafe == 0.0D && vertical == 0.0D) {
@@ -167,10 +174,15 @@ public final class FreeCamModule extends Module {
 				: new Vec3(-Mth.sin(yawRad), 0.0D, Mth.cos(yawRad));
 
 		Vec3 rightVector = new Vec3(-Mth.cos(yawRad), 0.0D, -Mth.sin(yawRad));
+		Vec3 plane = forwardVector.scale(forward).add(rightVector.scale(strafe));
 
-		Vec3 direction = forwardVector.scale(forward)
-				.add(rightVector.scale(strafe))
-				.add(0.0D, vertical, 0.0D);
+		// Clamp instead of normalising: a half-pressed stick should still move
+		// at half speed, while a diagonal must not outrun a straight line.
+		if (plane.lengthSqr() > 1.0D) {
+			plane = plane.normalize();
+		}
+
+		Vec3 direction = plane.add(0.0D, vertical, 0.0D);
 
 		if (direction.lengthSqr() < MIN_MOTION) {
 			return Vec3.ZERO;
@@ -182,7 +194,20 @@ public final class FreeCamModule extends Module {
 			speed *= Math.max(1.0D, config.sprintMultiplier);
 		}
 
-		return direction.normalize().scale(speed);
+		return direction.scale(speed);
+	}
+
+	/**
+	 * Ticks the real input handler -- the one parked while the body carries a
+	 * blank copy -- and reads the movement it produced.
+	 */
+	private Vec2 movementInput() {
+		if (savedInput == null) {
+			return Vec2.ZERO;
+		}
+
+		savedInput.tick();
+		return savedInput.getMoveVector();
 	}
 
 	private static double axis(boolean positive, boolean negative) {
