@@ -1,0 +1,96 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	// Mod Menu -- provides the "Config" button next to the mod in the mod list.
+	maven {
+		name = 'TerraformersMC'
+		url = 'https://maven.terraformersmc.com/'
+	}
+	// Cloth Config -- builds the settings screen itself.
+	maven {
+		name = 'shedaniel'
+		url = 'https://maven.shedaniel.me/'
+	}
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Both integrations are optional at runtime -- see ModMenuIntegration and
+	// ClothConfigScreenFactory, which are only touched when the mods are present.
+	// localRuntime puts them in the dev client so the screen can be tested there.
+	compileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
+		transitive(false)
+	}
+	localRuntime("com.terraformersmc:modmenu:${project.modmenu_version}") {
+		transitive(false)
+	}
+
+	compileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		exclude(group: 'net.fabricmc.fabric-api')
+	}
+	localRuntime("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		exclude(group: 'net.fabricmc.fabric-api')
+	}
+}
+
+processResources {
+	def modVersion = project.mod_version
+	def minecraftVersion = project.minecraft_version
+	def loaderVersion = project.loader_version
+
+	inputs.property "version", modVersion
+	inputs.property "minecraft_version", minecraftVersion
+	inputs.property "loader_version", loaderVersion
+
+	filesMatching("fabric.mod.json") {
+		expand "version": modVersion,
+				"minecraft_version": minecraftVersion,
+				"loader_version": loaderVersion
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from("LICENSE") {
+		rename { "${it}_$projectName" }
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+
+	repositories {
+	}
+}
