@@ -44,6 +44,6 @@ public final class ConfigScreens {
 			return;
 		}
 
-		minecraft.setScreen(screen);
+		minecraft.gui.setScreen(screen);
 	}
 }
