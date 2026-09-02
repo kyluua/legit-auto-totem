@@ -70,7 +70,6 @@
 	"text.utilitiesscarce.option.blocks": "Block ids",
 	"text.utilitiesscarce.option.block_range": "Block search radius",
 	"text.utilitiesscarce.option.max_blocks": "Max highlighted blocks",
-	"text.utilitiesscarce.option.slabs_per_tick": "Search slabs per tick",
 	"text.utilitiesscarce.option.show_entities": "Show entities",
 	"text.utilitiesscarce.option.show_blocks": "Show blocks",
 	"text.utilitiesscarce.option.through_walls": "Draw through walls",
@@ -78,5 +77,12 @@
 	"text.utilitiesscarce.option.block_color": "Block colour",
 	"text.utilitiesscarce.option.line_width": "Line width",
 	"text.utilitiesscarce.option.tracer_origin": "Line starts at",
-	"text.utilitiesscarce.option.origin_distance": "Crosshair offset"
+	"text.utilitiesscarce.option.origin_distance": "Crosshair offset",
+	"text.utilitiesscarce.option.use_render_distance": "Follow render distance",
+	"text.utilitiesscarce.option.block_range_limit": "Block radius limit",
+	"text.utilitiesscarce.option.scan_budget": "Block checks per tick",
+	"text.utilitiesscarce.option.color_mode": "Colour mode",
+	"text.utilitiesscarce.option.rainbow_speed": "Rainbow speed",
+	"text.utilitiesscarce.option.rainbow_spread": "Rainbow spread",
+	"text.utilitiesscarce.option.rainbow_alpha": "Rainbow opacity"
 }

@@ -11,13 +11,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 
 /**
- * Finds configured blocks near the player, a few horizontal slabs per tick.
+ * Finds configured blocks near the player, a fixed number of positions per tick.
  *
- * <p>Sweeping a 32-block radius in one go is a quarter of a million block
- * lookups; doing it in slabs keeps each tick cheap and refreshes the whole
- * volume roughly once a second. Results are swapped in only when a pass
- * finishes, so what gets drawn is always a complete sweep rather than a
- * half-built one.
+ * <p>A sweep covers the cube of its radius, which at render-distance scale is
+ * tens of millions of positions. Rather than let that land on one tick, the
+ * sweep walks a linear cursor through the volume and stops when it has spent
+ * its budget, resuming there next tick. Cost per tick is therefore flat no
+ * matter how far the search reaches; only the time to complete a pass grows.
+ *
+ * <p>Results are swapped in only when a pass finishes, so what gets drawn is
+ * always a complete sweep rather than a half-built one.
  */
 public final class BlockScanner {
 	private List<BlockPos> results = List.of();
@@ -25,7 +28,7 @@ public final class BlockScanner {
 	private BlockPos origin;
 	private Set<Block> passTargets = Set.of();
 	private int passRadius;
-	private int cursor;
+	private long cursor;
 
 	/** Positions from the most recently completed sweep. */
 	public List<BlockPos> results() {
@@ -35,11 +38,10 @@ public final class BlockScanner {
 	public void clear() {
 		results = List.of();
 		pending = null;
-		cursor = 0;
+		cursor = 0L;
 	}
 
-	public void tick(Minecraft minecraft, Set<Block> targets, int radius, int maxResults,
-			int slabsPerTick) {
+	public void tick(Minecraft minecraft, Set<Block> targets, int radius, int maxResults, int budget) {
 		LocalPlayer player = minecraft.player;
 		ClientLevel level = minecraft.level;
 
@@ -53,58 +55,51 @@ public final class BlockScanner {
 			origin = player.blockPosition();
 			passTargets = targets;
 			passRadius = radius;
-			cursor = 0;
+			cursor = 0L;
 			pending = new ArrayList<>();
 		}
 
 		int span = passRadius * 2 + 1;
+		long total = (long) span * span * span;
+		int remaining = Math.max(1, budget);
 		int minY = level.getMinY();
 		int maxY = level.getMaxY();
 		BlockPos.MutableBlockPos cursorPos = new BlockPos.MutableBlockPos();
-		int slabs = Math.max(1, slabsPerTick);
 
-		for (int slab = 0; slab < slabs && cursor < span; slab++, cursor++) {
-			int y = origin.getY() - passRadius + cursor;
+		while (remaining > 0 && cursor < total) {
+			remaining--;
+			long index = cursor++;
+
+			int dz = (int) (index % span);
+			long rest = index / span;
+			int dx = (int) (rest % span);
+			int dy = (int) (rest / span);
+
+			int y = origin.getY() - passRadius + dy;
 
 			if (y < minY || y > maxY) {
 				continue;
 			}
 
-			if (scanSlab(level, cursorPos, y, maxResults)) {
-				// Hit the cap; finish the sweep here rather than keep looking.
-				cursor = span;
-				break;
+			int x = origin.getX() - passRadius + dx;
+			int z = origin.getZ() - passRadius + dz;
+			cursorPos.set(x, y, z);
+
+			if (!passTargets.contains(level.getBlockState(cursorPos).getBlock())) {
+				continue;
+			}
+
+			pending.add(new BlockPos(x, y, z));
+
+			if (pending.size() >= maxResults) {
+				// Hit the cap; end the pass here rather than keep looking.
+				cursor = total;
 			}
 		}
 
-		if (cursor >= span) {
+		if (cursor >= total) {
 			results = List.copyOf(pending);
 			pending = null;
 		}
-	}
-
-	/** @return true once the result cap has been reached */
-	private boolean scanSlab(ClientLevel level, BlockPos.MutableBlockPos cursorPos, int y,
-			int maxResults) {
-		int originX = origin.getX();
-		int originZ = origin.getZ();
-
-		for (int dx = -passRadius; dx <= passRadius; dx++) {
-			for (int dz = -passRadius; dz <= passRadius; dz++) {
-				cursorPos.set(originX + dx, y, originZ + dz);
-
-				if (!passTargets.contains(level.getBlockState(cursorPos).getBlock())) {
-					continue;
-				}
-
-				pending.add(new BlockPos(originX + dx, y, originZ + dz));
-
-				if (pending.size() >= maxResults) {
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 }

@@ -52,8 +52,8 @@ When Free Cam is running, crosshair lines follow the free camera's aim rather th
 body's.
 
 Both take their targets from one shared **Targets** section — entity categories
-(players, hostile mobs, passive mobs, dropped items, everything else), an entity range,
-and a list of block ids with its own search radius. Deciding "what to highlight" once
+(players, hostile mobs, passive mobs, dropped items, everything else) and a list of
+block ids. Deciding "what to highlight" once
 means the two can never disagree about it, and the block sweep only has to run once no
 matter how many modules are drawing. Each module then owns only its own presentation:
 which of the two kinds to draw, the colours, the line width, and whether to draw through
@@ -61,6 +61,19 @@ walls.
 
 Block ids are plain strings like `minecraft:ancient_debris`; anything unparseable or
 unknown is skipped rather than breaking the rest of the list.
+
+**Range** follows your render distance by default — detect as far as you can see. That
+is exactly right for entities, which are cheap to filter and only exist near you anyway.
+Blocks follow it too but stop at `Block radius limit` (48 by default), because a sweep
+covers the *cube* of its radius: at a 32-chunk view that would be tens of millions of
+positions per pass and a refresh measured in minutes, which is slower than useless for
+finding ore. Turn the toggle off to set both ranges by hand.
+
+**Colour** is per module, and separate for entities and blocks. `STATIC` uses the RGBA
+picker; `RAINBOW` walks the hue wheel on a wall-clock timer, so it animates at the same
+rate whatever your frame rate. `Rainbow spread` offsets each target's hue a little so a
+crowd reads as a gradient rather than one flat colour, and `Rainbow opacity` sets alpha
+for that mode.
 
 ### Free Cam
 Detaches the camera from your body without moving your body.
@@ -112,10 +125,12 @@ either. They do register two line render types of their own, built from vanilla'
 snippet so no shader assets ship with the mod; the only difference between the two is
 that the through-walls one drops the depth state.
 
-Scanning for blocks is the expensive half, so it is spread out: a 32-block radius is a
-quarter of a million lookups, swept a few horizontal slabs per tick and swapped in only
-when a full pass finishes. What gets drawn is always a complete sweep rather than a
-half-built one, refreshed roughly once a second. `Max highlighted blocks` caps the
+Scanning for blocks is the expensive half, so its cost is bounded rather than left to
+grow with the radius. The sweep walks a linear cursor through the volume, stops when it
+has spent its per-tick budget of position checks, and resumes there next tick. Cost per
+tick is therefore flat no matter how far the search reaches — only the time to finish a
+pass grows. Results are swapped in only when a pass completes, so what gets drawn is
+always a complete sweep rather than a half-built one. `Max highlighted blocks` caps the
 result so a vein-rich area cannot stall a frame, and the sweep does not run at all
 unless a module is actually drawing blocks.
 
@@ -178,7 +193,12 @@ you want in the settings screen or with the hotkeys.
 ./gradlew build
 ```
 
-The jar lands in `build/libs/`. Use the one **without** the `-sources` suffix.
+The jar lands in `build/libs/`. Use the one **without** the `-sources` suffix. You need
+**JDK 25** — Minecraft 26.2 compiles at release 25, so an older JDK will not do it.
+
+Every push also builds on CI (`.github/workflows/build.yml`). If you would rather not
+set up a toolchain, open the repository's **Actions** tab, pick the latest run for your
+branch, and download the `utilities-scarce` artifact — the jar is inside.
 
 `./gradlew runClient` starts a dev client with Mod Menu and Cloth Config already on the
 classpath.

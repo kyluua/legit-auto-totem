@@ -3,6 +3,7 @@ package dev.kyluua.utilitiesscarce.gui;
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.AnchorSwapTarget;
+import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.ColorMode;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SearchOrder;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SwapMethod;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.TracerOrigin;
@@ -385,8 +386,17 @@ public final class ClothConfigScreenFactory {
 				.setSaveConsumer(value -> targets.ignoreInvisible = value)
 				.build());
 
+		category.addEntry(entries.startBooleanToggle(option("use_render_distance"),
+						targets.useRenderDistance)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal(
+						"Detect as far as you can see. Blocks still stop at the radius limit below."))
+				.setSaveConsumer(value -> targets.useRenderDistance = value)
+				.build());
+
 		category.addEntry(entries.startDoubleField(option("entity_range"), targets.entityRange)
 				.setDefaultValue(96.0D)
+				.setTooltip(Component.literal("Used only when the render distance is not followed."))
 				.setSaveConsumer(value -> targets.entityRange = value)
 				.build());
 
@@ -407,11 +417,20 @@ public final class ClothConfigScreenFactory {
 				.setSaveConsumer(value -> targets.maxBlocks = value)
 				.build());
 
-		category.addEntry(entries.startIntSlider(option("slabs_per_tick"), targets.slabsPerTick, 1, 32)
-				.setDefaultValue(4)
+		category.addEntry(entries.startIntSlider(option("block_range_limit"),
+						targets.blockRangeLimit, 8, 128)
+				.setDefaultValue(48)
 				.setTooltip(Component.literal(
-						"Higher refreshes the search sooner but costs more per tick."))
-				.setSaveConsumer(value -> targets.slabsPerTick = value)
+						"Ceiling on the block radius. Sweep cost grows with the cube of it."))
+				.setSaveConsumer(value -> targets.blockRangeLimit = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("scan_budget"), targets.scanBudget,
+						2000, 200000)
+				.setDefaultValue(24000)
+				.setTooltip(Component.literal(
+						"Block positions checked per tick. Higher finishes a sweep sooner."))
+				.setSaveConsumer(value -> targets.scanBudget = value)
 				.build());
 	}
 
@@ -440,6 +459,14 @@ public final class ClothConfigScreenFactory {
 				.setSaveConsumer(value -> module.throughWalls = value)
 				.build());
 
+		category.addEntry(entries.startEnumSelector(option("color_mode"), ColorMode.class,
+						module.colorMode)
+				.setDefaultValue(ColorMode.STATIC)
+				.setTooltip(Component.literal(
+						"STATIC uses the colours below. RAINBOW cycles the hue wheel."))
+				.setSaveConsumer(value -> module.colorMode = value)
+				.build());
+
 		category.addEntry(entries.startAlphaColorField(option("entity_color"), module.entityColor)
 				.setDefaultValue(0xFFFF5555)
 				.setSaveConsumer(value -> module.entityColor = value)
@@ -448,6 +475,24 @@ public final class ClothConfigScreenFactory {
 		category.addEntry(entries.startAlphaColorField(option("block_color"), module.blockColor)
 				.setDefaultValue(0xFF55FF55)
 				.setSaveConsumer(value -> module.blockColor = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("rainbow_speed"), module.rainbowSpeed)
+				.setDefaultValue(0.5D)
+				.setTooltip(Component.literal("Full hue cycles per second."))
+				.setSaveConsumer(value -> module.rainbowSpeed = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("rainbow_spread"), module.rainbowSpread)
+				.setDefaultValue(0.05D)
+				.setTooltip(Component.literal(
+						"Hue offset between consecutive targets, so a crowd reads as a gradient."))
+				.setSaveConsumer(value -> module.rainbowSpread = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("rainbow_alpha"), module.rainbowAlpha, 0, 255)
+				.setDefaultValue(255)
+				.setSaveConsumer(value -> module.rainbowAlpha = value)
 				.build());
 
 		category.addEntry(entries.startDoubleField(option("line_width"), module.lineWidth)
@@ -481,6 +526,14 @@ public final class ClothConfigScreenFactory {
 				.setSaveConsumer(value -> module.throughWalls = value)
 				.build());
 
+		category.addEntry(entries.startEnumSelector(option("color_mode"), ColorMode.class,
+						module.colorMode)
+				.setDefaultValue(ColorMode.STATIC)
+				.setTooltip(Component.literal(
+						"STATIC uses the colours below. RAINBOW cycles the hue wheel."))
+				.setSaveConsumer(value -> module.colorMode = value)
+				.build());
+
 		category.addEntry(entries.startAlphaColorField(option("entity_color"), module.entityColor)
 				.setDefaultValue(0xFFFF5555)
 				.setSaveConsumer(value -> module.entityColor = value)
@@ -489,6 +542,24 @@ public final class ClothConfigScreenFactory {
 		category.addEntry(entries.startAlphaColorField(option("block_color"), module.blockColor)
 				.setDefaultValue(0xFF55FF55)
 				.setSaveConsumer(value -> module.blockColor = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("rainbow_speed"), module.rainbowSpeed)
+				.setDefaultValue(0.5D)
+				.setTooltip(Component.literal("Full hue cycles per second."))
+				.setSaveConsumer(value -> module.rainbowSpeed = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("rainbow_spread"), module.rainbowSpread)
+				.setDefaultValue(0.05D)
+				.setTooltip(Component.literal(
+						"Hue offset between consecutive targets, so a crowd reads as a gradient."))
+				.setSaveConsumer(value -> module.rainbowSpread = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("rainbow_alpha"), module.rainbowAlpha, 0, 255)
+				.setDefaultValue(255)
+				.setSaveConsumer(value -> module.rainbowAlpha = value)
 				.build());
 
 		category.addEntry(entries.startDoubleField(option("line_width"), module.lineWidth)

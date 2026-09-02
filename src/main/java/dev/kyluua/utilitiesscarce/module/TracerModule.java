@@ -8,8 +8,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
 import dev.kyluua.utilitiesscarce.render.BlockScanner;
+import dev.kyluua.utilitiesscarce.render.DetectionRange;
 import dev.kyluua.utilitiesscarce.render.EspRenderTypes;
 import dev.kyluua.utilitiesscarce.render.HighlightTargets;
+import dev.kyluua.utilitiesscarce.render.Palette;
 import dev.kyluua.utilitiesscarce.render.RenderHelper;
 import dev.kyluua.utilitiesscarce.util.ActionScheduler;
 import dev.kyluua.utilitiesscarce.util.FreeCamState;
@@ -60,7 +62,8 @@ public final class TracerModule extends Module {
 		UtilitiesScarceConfig.Tracer tracer = config.tracer;
 
 		List<Vec3> entityTargets = tracer.showEntities
-				? entityPoints(minecraft, config.targets)
+				? entityPoints(minecraft, config.targets,
+						DetectionRange.entities(minecraft, config.targets))
 				: List.of();
 		List<Vec3> blockTargets = tracer.showBlocks
 				? blockPoints(blockScanner.results())
@@ -80,12 +83,14 @@ public final class TracerModule extends Module {
 
 		context.submitNodeCollector().submitCustomGeometry(poseStack,
 				EspRenderTypes.lines(tracer.throughWalls), (pose, buffer) -> {
-					for (Vec3 target : entityTargets) {
-						RenderHelper.line(pose, buffer, start, target, tracer.entityColor, width);
+					for (int index = 0; index < entityTargets.size(); index++) {
+						RenderHelper.line(pose, buffer, start, entityTargets.get(index),
+								color(tracer, tracer.entityColor, index), width);
 					}
 
-					for (Vec3 target : blockTargets) {
-						RenderHelper.line(pose, buffer, start, target, tracer.blockColor, width);
+					for (int index = 0; index < blockTargets.size(); index++) {
+						RenderHelper.line(pose, buffer, start, blockTargets.get(index),
+								color(tracer, tracer.blockColor, index), width);
 					}
 				});
 
@@ -107,9 +112,14 @@ public final class TracerModule extends Module {
 		};
 	}
 
+	private static int color(UtilitiesScarceConfig.Tracer tracer, int staticColor, int index) {
+		return Palette.resolve(tracer.colorMode, staticColor, tracer.rainbowSpeed,
+				tracer.rainbowSpread, tracer.rainbowAlpha, index);
+	}
+
 	private static List<Vec3> entityPoints(Minecraft minecraft,
-			UtilitiesScarceConfig.Targets targets) {
-		List<Entity> entities = HighlightTargets.entities(minecraft, targets);
+			UtilitiesScarceConfig.Targets targets, double range) {
+		List<Entity> entities = HighlightTargets.entities(minecraft, targets, range);
 		List<Vec3> points = new ArrayList<>(entities.size());
 
 		for (Entity entity : entities) {

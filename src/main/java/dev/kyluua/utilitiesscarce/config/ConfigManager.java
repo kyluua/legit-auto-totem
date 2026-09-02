@@ -149,6 +149,14 @@ public final class ConfigManager {
 			target.shieldDisable.triggerMode = UtilitiesScarceConfig.TriggerMode.ON_ATTACK;
 		}
 
+		if (target.esp.colorMode == null) {
+			target.esp.colorMode = UtilitiesScarceConfig.ColorMode.STATIC;
+		}
+
+		if (target.tracer.colorMode == null) {
+			target.tracer.colorMode = UtilitiesScarceConfig.ColorMode.STATIC;
+		}
+
 		if (target.tracer.origin == null) {
 			target.tracer.origin = UtilitiesScarceConfig.TracerOrigin.CROSSHAIR;
 		}

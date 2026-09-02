@@ -61,7 +61,12 @@ public final class HighlightTargets {
 		return cachedBlocks;
 	}
 
-	public static List<Entity> entities(Minecraft minecraft, UtilitiesScarceConfig.Targets config) {
+	/**
+	 * @param range how far to look, already resolved from the render distance
+	 *              or the manual setting
+	 */
+	public static List<Entity> entities(Minecraft minecraft, UtilitiesScarceConfig.Targets config,
+			double range) {
 		ClientLevel level = minecraft.level;
 		LocalPlayer player = minecraft.player;
 
@@ -69,7 +74,7 @@ public final class HighlightTargets {
 			return List.of();
 		}
 
-		double rangeSq = config.entityRange * config.entityRange;
+		double rangeSq = range * range;
 		List<Entity> found = new ArrayList<>();
 
 		for (Entity entity : level.entitiesForRendering()) {

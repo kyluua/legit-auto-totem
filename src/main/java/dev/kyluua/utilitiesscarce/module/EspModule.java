@@ -8,8 +8,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
 import dev.kyluua.utilitiesscarce.render.BlockScanner;
+import dev.kyluua.utilitiesscarce.render.DetectionRange;
 import dev.kyluua.utilitiesscarce.render.EspRenderTypes;
 import dev.kyluua.utilitiesscarce.render.HighlightTargets;
+import dev.kyluua.utilitiesscarce.render.Palette;
 import dev.kyluua.utilitiesscarce.render.RenderHelper;
 import dev.kyluua.utilitiesscarce.util.ActionScheduler;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
@@ -57,7 +59,8 @@ public final class EspModule extends Module {
 		UtilitiesScarceConfig.Esp esp = config.esp;
 
 		List<AABB> entityBoxes = esp.showEntities
-				? entityBoxes(minecraft, config.targets)
+				? entityBoxes(minecraft, config.targets,
+						DetectionRange.entities(minecraft, config.targets))
 				: List.of();
 		List<AABB> blockBoxes = esp.showBlocks
 				? blockBoxes(blockScanner.results())
@@ -77,20 +80,28 @@ public final class EspModule extends Module {
 
 		context.submitNodeCollector().submitCustomGeometry(poseStack,
 				EspRenderTypes.lines(esp.throughWalls), (pose, buffer) -> {
-					for (AABB box : entityBoxes) {
-						RenderHelper.box(pose, buffer, box, esp.entityColor, width);
+					for (int index = 0; index < entityBoxes.size(); index++) {
+						RenderHelper.box(pose, buffer, entityBoxes.get(index),
+								color(esp, esp.entityColor, index), width);
 					}
 
-					for (AABB box : blockBoxes) {
-						RenderHelper.box(pose, buffer, box, esp.blockColor, width);
+					for (int index = 0; index < blockBoxes.size(); index++) {
+						RenderHelper.box(pose, buffer, blockBoxes.get(index),
+								color(esp, esp.blockColor, index), width);
 					}
 				});
 
 		poseStack.popPose();
 	}
 
-	private static List<AABB> entityBoxes(Minecraft minecraft, UtilitiesScarceConfig.Targets targets) {
-		List<Entity> entities = HighlightTargets.entities(minecraft, targets);
+	private static int color(UtilitiesScarceConfig.Esp esp, int staticColor, int index) {
+		return Palette.resolve(esp.colorMode, staticColor, esp.rainbowSpeed, esp.rainbowSpread,
+				esp.rainbowAlpha, index);
+	}
+
+	private static List<AABB> entityBoxes(Minecraft minecraft, UtilitiesScarceConfig.Targets targets,
+			double range) {
+		List<Entity> entities = HighlightTargets.entities(minecraft, targets, range);
 		List<AABB> boxes = new ArrayList<>(entities.size());
 
 		for (Entity entity : entities) {

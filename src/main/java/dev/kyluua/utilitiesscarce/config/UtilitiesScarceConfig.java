@@ -149,6 +149,14 @@ public final class UtilitiesScarceConfig {
 		public boolean moveToHotbar = false;
 	}
 
+	/** How a highlight picks its colour. */
+	public enum ColorMode {
+		/** The configured colour, as-is. */
+		STATIC,
+		/** Cycles through the hue wheel. */
+		RAINBOW
+	}
+
 	/** Where a tracer line starts from. */
 	public enum TracerOrigin {
 		/** Just in front of the camera, so lines fan out from the crosshair. */
@@ -172,17 +180,31 @@ public final class UtilitiesScarceConfig {
 		/** Anything that is not a player, a mob or a dropped item. */
 		public boolean others = false;
 		public boolean ignoreInvisible = false;
+		/**
+		 * Detect as far as the client can see. Entities use the render distance
+		 * directly; the block sweep uses it too but stops at
+		 * {@link #blockRangeLimit}, because sweep cost grows with the cube of
+		 * the radius.
+		 */
+		public boolean useRenderDistance = true;
+		/** Entity range when not following the render distance. */
 		public double entityRange = 96.0D;
 		/** Block ids to look for. Unknown or malformed entries are ignored. */
 		public List<String> blocks = new ArrayList<>(List.of(
 				"minecraft:ancient_debris",
 				"minecraft:diamond_ore",
 				"minecraft:deepslate_diamond_ore"));
+		/** Block search radius when not following the render distance. */
 		public int blockRange = 32;
+		/** Ceiling on the block radius when following the render distance. */
+		public int blockRangeLimit = 48;
 		/** Cap on highlighted blocks, so a vein-rich area cannot stall a frame. */
 		public int maxBlocks = 512;
-		/** Horizontal slabs swept per tick. Higher refreshes sooner, costs more. */
-		public int slabsPerTick = 4;
+		/**
+		 * Block positions checked per tick. The sweep resumes where it stopped,
+		 * so this bounds the per-tick cost no matter how large the radius is.
+		 */
+		public int scanBudget = 24000;
 	}
 
 	public static final class Esp {
@@ -191,8 +213,15 @@ public final class UtilitiesScarceConfig {
 		public boolean showBlocks = true;
 		/** Draw through terrain. Off makes it an outline you only see in the open. */
 		public boolean throughWalls = true;
+		public ColorMode colorMode = ColorMode.STATIC;
 		public int entityColor = 0xFFFF5555;
 		public int blockColor = 0xFF55FF55;
+		/** Full hue cycles per second in RAINBOW mode. */
+		public double rainbowSpeed = 0.5D;
+		/** Hue offset between consecutive targets, 0 to 1. */
+		public double rainbowSpread = 0.05D;
+		/** Opacity used in RAINBOW mode, 0 to 255. */
+		public int rainbowAlpha = 255;
 		public double lineWidth = 2.0D;
 	}
 
@@ -201,8 +230,15 @@ public final class UtilitiesScarceConfig {
 		public boolean showEntities = true;
 		public boolean showBlocks = false;
 		public boolean throughWalls = true;
+		public ColorMode colorMode = ColorMode.STATIC;
 		public int entityColor = 0xFFFF5555;
 		public int blockColor = 0xFF55FF55;
+		/** Full hue cycles per second in RAINBOW mode. */
+		public double rainbowSpeed = 0.5D;
+		/** Hue offset between consecutive targets, 0 to 1. */
+		public double rainbowSpread = 0.05D;
+		/** Opacity used in RAINBOW mode, 0 to 255. */
+		public int rainbowAlpha = 255;
 		public double lineWidth = 1.5D;
 		public TracerOrigin origin = TracerOrigin.CROSSHAIR;
 		/** How far in front of the camera CROSSHAIR lines begin. */

@@ -8,6 +8,7 @@ import java.util.Map;
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
 import dev.kyluua.utilitiesscarce.render.BlockScanner;
+import dev.kyluua.utilitiesscarce.render.DetectionRange;
 import dev.kyluua.utilitiesscarce.render.HighlightTargets;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import dev.kyluua.utilitiesscarce.util.ActionScheduler;
@@ -132,8 +133,8 @@ public final class ModuleManager {
 		}
 
 		UtilitiesScarceConfig.Targets targets = config.targets;
-		blockScanner.tick(minecraft, HighlightTargets.blocks(targets.blocks), targets.blockRange,
-				targets.maxBlocks, targets.slabsPerTick);
+		blockScanner.tick(minecraft, HighlightTargets.blocks(targets.blocks),
+				DetectionRange.blocks(minecraft, targets), targets.maxBlocks, targets.scanBudget);
 	}
 
 	/** Forwards the level render pass to whichever modules draw. */
