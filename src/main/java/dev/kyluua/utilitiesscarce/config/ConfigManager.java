@@ -120,6 +120,22 @@ public final class ConfigManager {
 			target.freeCam = new UtilitiesScarceConfig.FreeCam();
 		}
 
+		if (target.targets == null) {
+			target.targets = new UtilitiesScarceConfig.Targets();
+		}
+
+		if (target.esp == null) {
+			target.esp = new UtilitiesScarceConfig.Esp();
+		}
+
+		if (target.tracer == null) {
+			target.tracer = new UtilitiesScarceConfig.Tracer();
+		}
+
+		if (target.targets.blocks == null) {
+			target.targets.blocks = new UtilitiesScarceConfig.Targets().blocks;
+		}
+
 		// Gson maps an unrecognised enum name to null rather than failing.
 		if (target.autoTotem.swapMethod == null) {
 			target.autoTotem.swapMethod = UtilitiesScarceConfig.SwapMethod.SWAP;
@@ -131,6 +147,10 @@ public final class ConfigManager {
 
 		if (target.shieldDisable.triggerMode == null) {
 			target.shieldDisable.triggerMode = UtilitiesScarceConfig.TriggerMode.ON_ATTACK;
+		}
+
+		if (target.tracer.origin == null) {
+			target.tracer.origin = UtilitiesScarceConfig.TracerOrigin.CROSSHAIR;
 		}
 
 		if (target.fastAnchor.swapTarget == null) {

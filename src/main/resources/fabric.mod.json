@@ -3,7 +3,7 @@
 	"id": "utilitiesscarce",
 	"version": "${version}",
 	"name": "Utilities Scarce",
-	"description": "Client-side utility modules: Auto Totem, Stun Slam, Shield Disable, Breach Swap, Fast Anchor and Free Cam. Every module is configurable and hotkey-toggleable.",
+	"description": "Client-side utility modules: Auto Totem, Stun Slam, Shield Disable, Breach Swap, Fast Anchor, Free Cam, ESP and Tracer. Every module is configurable and hotkey-toggleable.",
 	"authors": [
 		"kyluua"
 	],

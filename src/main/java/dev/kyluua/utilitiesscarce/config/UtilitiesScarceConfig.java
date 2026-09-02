@@ -1,5 +1,8 @@
 package dev.kyluua.utilitiesscarce.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Plain data holder for every setting in the mod. Serialised to
  * {@code config/utilitiesscarce.json} by {@link ConfigManager}.
@@ -15,6 +18,9 @@ public final class UtilitiesScarceConfig {
 	public BreachSwap breachSwap = new BreachSwap();
 	public FastAnchor fastAnchor = new FastAnchor();
 	public FreeCam freeCam = new FreeCam();
+	public Targets targets = new Targets();
+	public Esp esp = new Esp();
+	public Tracer tracer = new Tracer();
 
 	/** How an item is pulled out of the inventory into a hand slot. */
 	public enum SwapMethod {
@@ -141,6 +147,66 @@ public final class UtilitiesScarceConfig {
 		public boolean restoreSlot = true;
 		public int restoreDelayTicks = 2;
 		public boolean moveToHotbar = false;
+	}
+
+	/** Where a tracer line starts from. */
+	public enum TracerOrigin {
+		/** Just in front of the camera, so lines fan out from the crosshair. */
+		CROSSHAIR,
+		/** The camera itself. */
+		EYES,
+		/** The player's feet. */
+		FEET
+	}
+
+	/**
+	 * What ESP and Tracer highlight. Shared by both so the block sweep only has
+	 * to run once, and so "what to show" is decided in one place while each
+	 * module decides how to draw it.
+	 */
+	public static final class Targets {
+		public boolean players = true;
+		public boolean hostiles = true;
+		public boolean passives = false;
+		public boolean items = true;
+		/** Anything that is not a player, a mob or a dropped item. */
+		public boolean others = false;
+		public boolean ignoreInvisible = false;
+		public double entityRange = 96.0D;
+		/** Block ids to look for. Unknown or malformed entries are ignored. */
+		public List<String> blocks = new ArrayList<>(List.of(
+				"minecraft:ancient_debris",
+				"minecraft:diamond_ore",
+				"minecraft:deepslate_diamond_ore"));
+		public int blockRange = 32;
+		/** Cap on highlighted blocks, so a vein-rich area cannot stall a frame. */
+		public int maxBlocks = 512;
+		/** Horizontal slabs swept per tick. Higher refreshes sooner, costs more. */
+		public int slabsPerTick = 4;
+	}
+
+	public static final class Esp {
+		public boolean enabled = false;
+		public boolean showEntities = true;
+		public boolean showBlocks = true;
+		/** Draw through terrain. Off makes it an outline you only see in the open. */
+		public boolean throughWalls = true;
+		public int entityColor = 0xFFFF5555;
+		public int blockColor = 0xFF55FF55;
+		public double lineWidth = 2.0D;
+	}
+
+	public static final class Tracer {
+		public boolean enabled = false;
+		public boolean showEntities = true;
+		public boolean showBlocks = false;
+		public boolean throughWalls = true;
+		public int entityColor = 0xFFFF5555;
+		public int blockColor = 0xFF55FF55;
+		public double lineWidth = 1.5D;
+		public TracerOrigin origin = TracerOrigin.CROSSHAIR;
+		/** How far in front of the camera CROSSHAIR lines begin. */
+		public double originDistance = 1.0D;
 	}
 
 	public static final class FreeCam {

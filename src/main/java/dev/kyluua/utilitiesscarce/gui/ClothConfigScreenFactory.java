@@ -5,6 +5,7 @@ import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.AnchorSwapTarget;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SearchOrder;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SwapMethod;
+import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.TracerOrigin;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.TriggerMode;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -39,6 +40,9 @@ public final class ClothConfigScreenFactory {
 		addBreachSwap(builder, entries, config);
 		addFastAnchor(builder, entries, config);
 		addFreeCam(builder, entries, config);
+		addTargets(builder, entries, config);
+		addEsp(builder, entries, config);
+		addTracer(builder, entries, config);
 
 		return builder.build();
 	}
@@ -339,6 +343,168 @@ public final class ClothConfigScreenFactory {
 		category.addEntry(entries.startBooleanToggle(option("move_to_hotbar"), module.moveToHotbar)
 				.setDefaultValue(false)
 				.setSaveConsumer(value -> module.moveToHotbar = value)
+				.build());
+	}
+
+	private static void addTargets(ConfigBuilder builder, ConfigEntryBuilder entries,
+			UtilitiesScarceConfig config) {
+		ConfigCategory category = category(builder, "text.utilitiesscarce.category.targets");
+		UtilitiesScarceConfig.Targets targets = config.targets;
+
+		category.addEntry(entries.startTextDescription(Component.literal(
+				"Shared by ESP and Tracer, so the block search only runs once."))
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("players"), targets.players)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> targets.players = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("hostiles"), targets.hostiles)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> targets.hostiles = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("passives"), targets.passives)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> targets.passives = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("items"), targets.items)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> targets.items = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("others"), targets.others)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> targets.others = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("ignore_invisible"), targets.ignoreInvisible)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> targets.ignoreInvisible = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("entity_range"), targets.entityRange)
+				.setDefaultValue(96.0D)
+				.setSaveConsumer(value -> targets.entityRange = value)
+				.build());
+
+		category.addEntry(entries.startStrList(option("blocks"), targets.blocks)
+				.setDefaultValue(new UtilitiesScarceConfig.Targets().blocks)
+				.setTooltip(Component.literal(
+						"One id per line, e.g. minecraft:ancient_debris. Unknown ids are ignored."))
+				.setSaveConsumer(value -> targets.blocks = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("block_range"), targets.blockRange, 4, 128)
+				.setDefaultValue(32)
+				.setSaveConsumer(value -> targets.blockRange = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("max_blocks"), targets.maxBlocks, 32, 4096)
+				.setDefaultValue(512)
+				.setSaveConsumer(value -> targets.maxBlocks = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("slabs_per_tick"), targets.slabsPerTick, 1, 32)
+				.setDefaultValue(4)
+				.setTooltip(Component.literal(
+						"Higher refreshes the search sooner but costs more per tick."))
+				.setSaveConsumer(value -> targets.slabsPerTick = value)
+				.build());
+	}
+
+	private static void addEsp(ConfigBuilder builder, ConfigEntryBuilder entries,
+			UtilitiesScarceConfig config) {
+		ConfigCategory category = category(builder, "text.utilitiesscarce.module.esp");
+		UtilitiesScarceConfig.Esp module = config.esp;
+
+		category.addEntry(entries.startBooleanToggle(option("enabled"), module.enabled)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> module.enabled = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("show_entities"), module.showEntities)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> module.showEntities = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("show_blocks"), module.showBlocks)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> module.showBlocks = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("through_walls"), module.throughWalls)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> module.throughWalls = value)
+				.build());
+
+		category.addEntry(entries.startAlphaColorField(option("entity_color"), module.entityColor)
+				.setDefaultValue(0xFFFF5555)
+				.setSaveConsumer(value -> module.entityColor = value)
+				.build());
+
+		category.addEntry(entries.startAlphaColorField(option("block_color"), module.blockColor)
+				.setDefaultValue(0xFF55FF55)
+				.setSaveConsumer(value -> module.blockColor = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("line_width"), module.lineWidth)
+				.setDefaultValue(2.0D)
+				.setSaveConsumer(value -> module.lineWidth = value)
+				.build());
+	}
+
+	private static void addTracer(ConfigBuilder builder, ConfigEntryBuilder entries,
+			UtilitiesScarceConfig config) {
+		ConfigCategory category = category(builder, "text.utilitiesscarce.module.tracer");
+		UtilitiesScarceConfig.Tracer module = config.tracer;
+
+		category.addEntry(entries.startBooleanToggle(option("enabled"), module.enabled)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> module.enabled = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("show_entities"), module.showEntities)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> module.showEntities = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("show_blocks"), module.showBlocks)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> module.showBlocks = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("through_walls"), module.throughWalls)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> module.throughWalls = value)
+				.build());
+
+		category.addEntry(entries.startAlphaColorField(option("entity_color"), module.entityColor)
+				.setDefaultValue(0xFFFF5555)
+				.setSaveConsumer(value -> module.entityColor = value)
+				.build());
+
+		category.addEntry(entries.startAlphaColorField(option("block_color"), module.blockColor)
+				.setDefaultValue(0xFF55FF55)
+				.setSaveConsumer(value -> module.blockColor = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("line_width"), module.lineWidth)
+				.setDefaultValue(1.5D)
+				.setSaveConsumer(value -> module.lineWidth = value)
+				.build());
+
+		category.addEntry(entries.startEnumSelector(option("tracer_origin"), TracerOrigin.class,
+						module.origin)
+				.setDefaultValue(TracerOrigin.CROSSHAIR)
+				.setSaveConsumer(value -> module.origin = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("origin_distance"), module.originDistance)
+				.setDefaultValue(1.0D)
+				.setSaveConsumer(value -> module.originDistance = value)
 				.build());
 	}
 

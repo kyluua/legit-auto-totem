@@ -1,6 +1,6 @@
 # Utilities Scarce
 
-A client-side Fabric mod for **Minecraft 26.2** with six utility modules.
+A client-side Fabric mod for **Minecraft 26.2** with eight utility modules.
 Everything is configurable from Mod Menu and every module has its own toggle hotkey.
 
 ## Modules
@@ -40,6 +40,27 @@ mace, lands one hit, and returns to the weapon that started the trade.
 
 `Require Breach` and `Minimum Breach level` control which mace qualifies; the trigger
 weapons (sword, axe) can be enabled independently.
+
+### ESP
+Draws a box around every configured entity and block, through terrain by default.
+
+### Tracer
+Draws a line from the viewer to every configured entity and block. Lines start just in
+front of the camera by default, which keeps them clear of the near clip plane and makes
+them read as fanning out from the crosshair; `EYES` and `FEET` are the alternatives.
+When Free Cam is running, crosshair lines follow the free camera's aim rather than the
+body's.
+
+Both take their targets from one shared **Targets** section — entity categories
+(players, hostile mobs, passive mobs, dropped items, everything else), an entity range,
+and a list of block ids with its own search radius. Deciding "what to highlight" once
+means the two can never disagree about it, and the block sweep only has to run once no
+matter how many modules are drawing. Each module then owns only its own presentation:
+which of the two kinds to draw, the colours, the line width, and whether to draw through
+walls.
+
+Block ids are plain strings like `minecraft:ancient_debris`; anything unparseable or
+unknown is skipped rather than breaking the rest of the list.
 
 ### Free Cam
 Detaches the camera from your body without moving your body.
@@ -86,6 +107,21 @@ steps such as picking a hotbar slot are free. Hotbar changes rely on the game's 
 held-item sync, which is flushed before the next attack or use, so a swap-and-hit still
 lands with the new item without any extra packets of our own.
 
+ESP and Tracer draw through Fabric's `LevelRenderEvents`, so they need no mixins
+either. They do register two line render types of their own, built from vanilla's line
+snippet so no shader assets ship with the mod; the only difference between the two is
+that the through-walls one drops the depth state.
+
+Scanning for blocks is the expensive half, so it is spread out: a 32-block radius is a
+quarter of a million lookups, swept a few horizontal slabs per tick and swapped in only
+when a full pass finishes. What gets drawn is always a complete sweep rather than a
+half-built one, refreshed roughly once a second. `Max highlighted blocks` caps the
+result so a vein-rich area cannot stall a frame, and the sweep does not run at all
+unless a module is actually drawing blocks.
+
+Entity boxes are not interpolated between ticks, so a fast-moving target's box can trail
+it by up to a tick.
+
 Free Cam is the one module that needs mixins: the camera position and mouse look have
 no event hooks. It uses two, both narrow — one on `Camera` (place the camera, and turn
 off occlusion culling, which is computed from the player's position and would otherwise
@@ -113,6 +149,8 @@ Defaults sit on the numeric keypad, which vanilla leaves unbound. Rebind them in
 | `Keypad 4` | Toggle Breach Swap |
 | `Keypad 5` | Toggle Fast Anchor |
 | `Keypad 6` | Toggle Free Cam |
+| `Keypad 7` | Toggle ESP |
+| `Keypad 8` | Toggle Tracer |
 
 Toggling writes straight to the config file, so hotkeys and the settings screen always
 agree.
@@ -131,7 +169,7 @@ agree.
 Both optional mods are compile-only. Without them the mod still runs and the hotkeys
 still work; you just edit `config/utilitiesscarce.json` by hand instead.
 
-Only Auto Totem is enabled out of the box. The other five default to off — turn on what
+Only Auto Totem is enabled out of the box. The other seven default to off — turn on what
 you want in the settings screen or with the hotkeys.
 
 ## Building

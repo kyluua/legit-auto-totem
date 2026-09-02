@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
+import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
+import dev.kyluua.utilitiesscarce.render.BlockScanner;
+import dev.kyluua.utilitiesscarce.render.HighlightTargets;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import dev.kyluua.utilitiesscarce.util.ActionScheduler;
 import dev.kyluua.utilitiesscarce.util.ClientActions;
 import net.minecraft.client.Minecraft;
@@ -29,6 +33,11 @@ public final class ModuleManager {
 	private final BreachSwapModule breachSwap;
 	private final FastAnchorModule fastAnchor;
 	private final FreeCamModule freeCam;
+	private final EspModule esp;
+	private final TracerModule tracer;
+
+	/** Shared by ESP and Tracer so the block sweep only runs once. */
+	private final BlockScanner blockScanner = new BlockScanner();
 
 	private final List<Module> modules = new ArrayList<>();
 	private final List<Module> attackPriority = new ArrayList<>();
@@ -44,6 +53,8 @@ public final class ModuleManager {
 		breachSwap = new BreachSwapModule(scheduler);
 		fastAnchor = new FastAnchorModule(scheduler);
 		freeCam = new FreeCamModule(scheduler);
+		esp = new EspModule(scheduler, blockScanner);
+		tracer = new TracerModule(scheduler, blockScanner);
 
 		modules.add(autoTotem);
 		modules.add(stunSlam);
@@ -51,6 +62,8 @@ public final class ModuleManager {
 		modules.add(breachSwap);
 		modules.add(fastAnchor);
 		modules.add(freeCam);
+		modules.add(esp);
+		modules.add(tracer);
 
 		attackPriority.add(stunSlam);
 		attackPriority.add(shieldDisable);
@@ -101,7 +114,39 @@ public final class ModuleManager {
 			module.onTick(minecraft);
 		}
 
+		tickBlockScanner(minecraft);
 		scheduler.tick(ConfigManager.get().general.maxActionsPerTick);
+	}
+
+	/**
+	 * Sweeps for highlighted blocks only while something actually draws them.
+	 */
+	private void tickBlockScanner(Minecraft minecraft) {
+		UtilitiesScarceConfig config = ConfigManager.get();
+		boolean wanted = (config.esp.enabled && config.esp.showBlocks)
+				|| (config.tracer.enabled && config.tracer.showBlocks);
+
+		if (!wanted) {
+			blockScanner.clear();
+			return;
+		}
+
+		UtilitiesScarceConfig.Targets targets = config.targets;
+		blockScanner.tick(minecraft, HighlightTargets.blocks(targets.blocks), targets.blockRange,
+				targets.maxBlocks, targets.slabsPerTick);
+	}
+
+	/** Forwards the level render pass to whichever modules draw. */
+	public void onLevelRender(LevelRenderContext context) {
+		if (Minecraft.getInstance().player == null) {
+			return;
+		}
+
+		for (Module module : modules) {
+			if (module.isEnabled()) {
+				module.onRender(context);
+			}
+		}
 	}
 
 	public void onAttackEntity(Minecraft minecraft, Entity target) {
@@ -134,6 +179,7 @@ public final class ModuleManager {
 	public void stopAll() {
 		scheduler.clear();
 		wasEnabled.clear();
+		blockScanner.clear();
 
 		for (Module module : modules) {
 			module.onStop();

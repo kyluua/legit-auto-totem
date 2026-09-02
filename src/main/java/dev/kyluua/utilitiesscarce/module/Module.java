@@ -1,6 +1,7 @@
 package dev.kyluua.utilitiesscarce.module;
 
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import dev.kyluua.utilitiesscarce.util.ActionScheduler;
 import dev.kyluua.utilitiesscarce.util.Notifier;
 import net.minecraft.client.Minecraft;
@@ -62,6 +63,13 @@ public abstract class Module {
 	 */
 	public boolean onAttackEntity(Minecraft minecraft, Entity target) {
 		return false;
+	}
+
+	/**
+	 * Called while the level is being drawn, for modules that render. Runs on
+	 * the render thread's pass, so read state rather than mutating it.
+	 */
+	public void onRender(LevelRenderContext context) {
 	}
 
 	/** Called when the player right-clicks a block. */
