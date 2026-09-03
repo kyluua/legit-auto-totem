@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -36,3 +36,25 @@ jobs:
             build/libs/*.jar
             !build/libs/*-sources.jar
           if-no-files-found: error
+
+      # Also park the jar on an orphan "dist" branch, so it can be downloaded
+      # as a plain file over git or raw.githubusercontent.com rather than only
+      # as a zipped Actions artifact.
+      - name: Publish jar to dist branch
+        run: |
+          set -eu
+          jar=$(ls build/libs/*.jar | grep -v -- '-sources' | head -1)
+          echo "Publishing $jar"
+          work=$(mktemp -d)
+          cp "$jar" "$work/"
+          cd "$work"
+          git init -q
+          git checkout -q -b dist
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Jar built from ${GITHUB_SHA}"
+          git push -q --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
