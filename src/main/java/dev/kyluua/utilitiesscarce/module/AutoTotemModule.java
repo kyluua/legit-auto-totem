@@ -21,12 +21,18 @@ public final class AutoTotemModule extends Module {
 	private static final String OWNER = "auto_totem";
 	/** How long after taking damage a vacancy still counts as a pop. */
 	private static final int DAMAGE_WINDOW_TICKS = 10;
+	/** Nothing is pending. */
+	private static final int NO_SLOT = Integer.MIN_VALUE;
+	/** How long to wait for a refill click to show up before giving up on it. */
+	private static final int PENDING_TIMEOUT_TICKS = 20;
 
 	private final boolean[] hotbarHadTotem = new boolean[InventoryHelper.HOTBAR_SIZE];
 	private boolean offhandHadTotem;
 	private boolean primed;
 	private int cooldown;
 	private int damageTimer;
+	private int pendingSlot = NO_SLOT;
+	private int pendingTicks;
 
 	public AutoTotemModule(ActionScheduler scheduler) {
 		super("auto_totem", scheduler);
@@ -47,6 +53,8 @@ public final class AutoTotemModule extends Module {
 		primed = false;
 		cooldown = 0;
 		damageTimer = 0;
+		pendingSlot = NO_SLOT;
+		pendingTicks = 0;
 	}
 
 	@Override
@@ -89,6 +97,18 @@ public final class AutoTotemModule extends Module {
 			return;
 		}
 
+		// A refill click is optimistic: the client shows the totem arrive at
+		// once, but a server that refuses the click leaves the slot empty
+		// again. Wait for it to settle instead of firing another click every
+		// couple of ticks, which is what turned one pop into a burst.
+		if (pendingSlot != NO_SLOT) {
+			if (isFilled(pendingSlot, offhandHasTotem, hotbarHasTotem) || --pendingTicks <= 0) {
+				pendingSlot = NO_SLOT;
+			} else {
+				return;
+			}
+		}
+
 		if (target == Integer.MIN_VALUE || cooldown > 0 || scheduler.isRunning(OWNER)) {
 			return;
 		}
@@ -106,6 +126,14 @@ public final class AutoTotemModule extends Module {
 		}
 
 		refill(minecraft, config, target);
+	}
+
+	private static boolean isFilled(int slot, boolean offhandHasTotem, boolean[] hotbarHasTotem) {
+		if (slot == InventoryHelper.OFFHAND_TARGET) {
+			return offhandHasTotem;
+		}
+
+		return slot >= 0 && slot < hotbarHasTotem.length && hotbarHasTotem[slot];
 	}
 
 	/**
@@ -144,6 +172,8 @@ public final class AutoTotemModule extends Module {
 		}
 
 		cooldown = Math.max(0, config.cooldownTicks);
+		pendingSlot = target;
+		pendingTicks = PENDING_TIMEOUT_TICKS;
 
 		Sequence sequence = new Sequence()
 				.require(() -> minecraft.player != null && InventoryHelper.canClickInventory(minecraft))

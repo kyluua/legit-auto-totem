@@ -118,7 +118,7 @@ public final class ShieldDisableModule extends Module {
 		Sequence sequence = new Sequence()
 				.require(() -> minecraft.player != null
 						&& ClientActions.isValidTarget(minecraft.player, target, config.maxRange))
-				.runLocal(0, () -> InventoryHelper.selectHotbarSlot(player, axeSlot));
+				.run(0, () -> InventoryHelper.selectHotbarSlot(player, axeSlot));
 
 		if (config.waitForCooldown) {
 			sequence.waitUntil(() -> ClientActions.attackReady(player), config.cooldownTimeoutTicks);
@@ -130,7 +130,7 @@ public final class ShieldDisableModule extends Module {
 		});
 
 		if (config.restoreSlot) {
-			sequence.runLocal(config.restoreDelayTicks,
+			sequence.run(config.restoreDelayTicks,
 					() -> InventoryHelper.selectHotbarSlot(player, originalSlot));
 			sequence.onAbort(() -> InventoryHelper.selectHotbarSlot(player, originalSlot));
 		}

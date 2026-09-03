@@ -74,12 +74,12 @@ public final class StunSlamModule extends Module {
 		// The axe hit. Skipped when the attack that triggered this was already
 		// an axe hit, so the shield is not struck twice for nothing.
 		if (axeSlot != originalSlot) {
-			sequence.runLocal(config.axeDelayTicks,
+			sequence.run(config.axeDelayTicks,
 					() -> InventoryHelper.selectHotbarSlot(player, axeSlot));
 			sequence.run(0, () -> ClientActions.attack(minecraft, target));
 		}
 
-		sequence.runLocal(config.maceDelayTicks,
+		sequence.run(config.maceDelayTicks,
 				() -> InventoryHelper.selectHotbarSlot(player, maceSlot));
 
 		if (config.waitForCooldown) {
@@ -92,7 +92,7 @@ public final class StunSlamModule extends Module {
 		});
 
 		if (config.restoreSlot) {
-			sequence.runLocal(config.restoreDelayTicks,
+			sequence.run(config.restoreDelayTicks,
 					() -> InventoryHelper.selectHotbarSlot(player, originalSlot));
 			sequence.onAbort(() -> InventoryHelper.selectHotbarSlot(player, originalSlot));
 		}

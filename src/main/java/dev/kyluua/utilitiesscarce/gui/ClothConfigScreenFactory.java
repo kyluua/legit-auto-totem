@@ -120,7 +120,7 @@ public final class ClothConfigScreenFactory {
 				.build());
 
 		category.addEntry(entries.startIntSlider(option("cooldown_ticks"), module.cooldownTicks, 0, 40)
-				.setDefaultValue(2)
+				.setDefaultValue(5)
 				.setSaveConsumer(value -> module.cooldownTicks = value)
 				.build());
 
@@ -264,7 +264,7 @@ public final class ClothConfigScreenFactory {
 				.build());
 
 		category.addEntry(entries.startIntSlider(option("cooldown_ticks"), module.cooldownTicks, 0, 60)
-				.setDefaultValue(10)
+				.setDefaultValue(20)
 				.setSaveConsumer(value -> module.cooldownTicks = value)
 				.build());
 

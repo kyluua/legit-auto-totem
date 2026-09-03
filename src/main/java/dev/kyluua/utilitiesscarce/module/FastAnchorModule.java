@@ -158,7 +158,7 @@ public final class FastAnchorModule extends Module {
 
 		Sequence sequence = new Sequence()
 				.require(() -> minecraft.player != null && minecraft.level != null)
-				.runLocal(0, () -> InventoryHelper.selectHotbarSlot(player, glowstoneSlot));
+				.run(0, () -> InventoryHelper.selectHotbarSlot(player, glowstoneSlot));
 
 		for (int index = 0; index < charges; index++) {
 			// Keep repeat charges at least a tick apart so the server sees them
@@ -169,7 +169,7 @@ public final class FastAnchorModule extends Module {
 			sequence.run(delay, () -> ClientActions.useItemOn(minecraft, chargeHit(minecraft, anchor)));
 		}
 
-		sequence.runLocal(config.swapDelayTicks, () -> swapAfterCharge(minecraft, config, originalSlot));
+		sequence.run(config.swapDelayTicks, () -> swapAfterCharge(minecraft, config, originalSlot));
 		sequence.onAbort(() -> swapAfterCharge(minecraft, config, originalSlot));
 
 		scheduler.submit(HAND_LANE, sequence);

@@ -3,6 +3,7 @@ package dev.kyluua.utilitiesscarce.util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -62,8 +63,16 @@ public final class ClientActions {
 		}
 
 		runSynthetic(() -> {
-			minecraft.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hitResult);
-			player.swing(InteractionHand.MAIN_HAND);
+			InteractionResult result =
+					minecraft.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hitResult);
+
+			// Vanilla swings only when the interaction asks for it. Swinging
+			// regardless costs a packet per use and animates clicks that the
+			// server refused.
+			if (result instanceof InteractionResult.Success success
+					&& success.swingSource() == InteractionResult.SwingSource.CLIENT) {
+				player.swing(InteractionHand.MAIN_HAND);
+			}
 		});
 	}
 

@@ -76,7 +76,7 @@ public final class BreachSwapModule extends Module {
 		Sequence sequence = new Sequence()
 				.require(() -> minecraft.player != null
 						&& ClientActions.isValidTarget(minecraft.player, target, config.maxRange))
-				.runLocal(config.maceDelayTicks,
+				.run(config.maceDelayTicks,
 						() -> InventoryHelper.selectHotbarSlot(player, maceSlot));
 
 		if (config.waitForCooldown) {
@@ -89,7 +89,7 @@ public final class BreachSwapModule extends Module {
 		});
 
 		if (config.restoreSlot) {
-			sequence.runLocal(config.restoreDelayTicks,
+			sequence.run(config.restoreDelayTicks,
 					() -> InventoryHelper.selectHotbarSlot(player, originalSlot));
 			sequence.onAbort(() -> InventoryHelper.selectHotbarSlot(player, originalSlot));
 		}

@@ -88,7 +88,7 @@ public final class UtilitiesScarceConfig {
 		/** Ticks between spotting the empty slot and refilling it. */
 		public int delayTicks = 0;
 		/** Minimum ticks between two refills. */
-		public int cooldownTicks = 2;
+		public int cooldownTicks = 5;
 		/** Leave this many totems untouched in the inventory. */
 		public int keepInReserve = 0;
 		public SwapMethod swapMethod = SwapMethod.SWAP;
@@ -129,7 +129,7 @@ public final class UtilitiesScarceConfig {
 		public int restoreDelayTicks = 2;
 		public boolean moveToHotbar = false;
 		/** Minimum ticks between two disable attempts on the same target. */
-		public int cooldownTicks = 10;
+		public int cooldownTicks = 20;
 	}
 
 	public static final class BreachSwap {

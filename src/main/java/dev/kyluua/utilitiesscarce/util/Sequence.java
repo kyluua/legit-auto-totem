@@ -42,15 +42,13 @@ public final class Sequence {
 		return this;
 	}
 
-	/** An action that sends something to the server, after an optional delay. */
+	/**
+	 * An action that reaches the server, after an optional delay. Selecting a
+	 * hotbar slot counts: the game syncs the held item at the end of the tick,
+	 * so a switch is a packet just as much as an attack is.
+	 */
 	public Sequence run(int delayTicks, Runnable action) {
 		steps.add(new Step(Math.max(0, delayTicks), null, 0, action, true));
-		return this;
-	}
-
-	/** A local-only action such as selecting a hotbar slot; costs no budget. */
-	public Sequence runLocal(int delayTicks, Runnable action) {
-		steps.add(new Step(Math.max(0, delayTicks), null, 0, action, false));
 		return this;
 	}
 

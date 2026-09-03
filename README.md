@@ -115,10 +115,23 @@ The mod never detonates the anchor — that is still your click.
 ## Packet behaviour
 
 Every module runs its steps through one scheduler with a shared per-tick budget
-(`Max actions per tick`, default 2). Steps that produce a packet are counted; local
-steps such as picking a hotbar slot are free. Hotbar changes rely on the game's own
-held-item sync, which is flushed before the next attack or use, so a swap-and-hit still
-lands with the new item without any extra packets of our own.
+(`Max actions per tick`, default 2). **Everything that reaches the server counts against
+it, hotbar switches included** — the game syncs the held item at the end of the tick, so
+a switch costs a packet just as much as an attack does. Hotbar changes still ride that
+built-in sync rather than sending anything of our own, so a swap-and-hit lands with the
+new item at no extra cost.
+
+Three things that used to waste packets are gone:
+
+- **Pulling a tool out of storage** sends a container click that only pays off next tick,
+  and the module bails out meanwhile. An auto-triggering module would send one every
+  tick for as long as the tool stayed out of the hotbar — twenty a second, going
+  nowhere. Pulls are now rate-limited.
+- **Auto Totem** would re-fire while its refill click was still unconfirmed, turning one
+  pop into a burst. It now waits for the slot to settle before trying again.
+- **Fast Anchor** swung after every charge. Vanilla swings only when the interaction
+  asks for it, so that was a spare packet per charge and an animation on clicks the
+  server had refused.
 
 ESP and Tracer draw through Fabric's `LevelRenderEvents`, so they need no mixins
 either. They do register two line render types of their own, built from vanilla's line
