@@ -16,44 +16,62 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 25
+      # 26.2 compiles at release 25; 1.21.11 at release 21. The last entry
+      # becomes the default JAVA_HOME, so the root build gets 25.
+      - name: Set up JDKs
         uses: actions/setup-java@v4
         with:
-          java-version: "25"
+          java-version: |
+            21
+            25
           distribution: temurin
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build
+      - name: Build for 26.2
         run: ./gradlew build --stacktrace
 
-      - name: Upload jar
+      - name: Build for 1.21.11
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+        run: ./gradlew -p versions/1.21.11 build --stacktrace
+
+      - name: Collect jars
+        run: |
+          set -eu
+          mkdir -p dist
+          for dir in build/libs versions/1.21.11/build/libs; do
+            for jar in "$dir"/*.jar; do
+              case "$jar" in
+                *-sources.jar) continue ;;
+              esac
+              cp "$jar" dist/
+            done
+          done
+          ls -l dist
+
+      - name: Upload jars
         uses: actions/upload-artifact@v4
         with:
           name: utilities-scarce
-          path: |
-            build/libs/*.jar
-            !build/libs/*-sources.jar
+          path: dist/*.jar
           if-no-files-found: error
 
-      # Also park the jar on an orphan "dist" branch, so it can be downloaded
-      # as a plain file over git or raw.githubusercontent.com rather than only
-      # as a zipped Actions artifact.
-      - name: Publish jar to dist branch
+      # Also park the jars on an orphan "dist" branch, so they can be
+      # downloaded as plain files over git rather than as a zipped artifact.
+      - name: Publish jars to dist branch
         run: |
           set -eu
-          jar=$(ls build/libs/*.jar | grep -v -- '-sources' | head -1)
-          echo "Publishing $jar"
           work=$(mktemp -d)
-          cp "$jar" "$work/"
+          cp dist/*.jar "$work/"
           cd "$work"
           git init -q
           git checkout -q -b dist
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "Jar built from ${GITHUB_SHA}"
+          git commit -q -m "Jars built from ${GITHUB_SHA}"
           git push -q --force \
             "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" dist
         env:
