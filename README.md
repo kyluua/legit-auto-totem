@@ -185,29 +185,30 @@ agree.
 
 ## Minecraft versions
 
-| Version | Where | Settings screen |
-| --- | --- | --- |
-| **26.2** | repository root | Mod Menu + Cloth Config |
-| **1.21.11** | `versions/1.21.11/` | JSON file + hotkeys only |
+| Version | Where | Java | Settings screen |
+| --- | --- | --- | --- |
+| **26.2** | repository root | 25 | Mod Menu + Cloth Config |
+| **1.21.11** | `versions/1.21.11/` | 21 | Mod Menu + Cloth Config |
 
-Both build from this branch and CI publishes both jars. The 1.21.11 build is a
-separate Gradle project rather than a shared source tree, so a change to a module
-has to be made in both places.
+Same modules, same hotkeys, same `config/utilitiesscarce.json`. Both build from this
+branch and CI publishes both jars. The 1.21.11 build is a separate Gradle project
+rather than a shared source tree, so a change to a module has to be made in both
+places; `versions/1.21.11/README.md` lists the API differences between them.
 
-1.21.11 has no settings screen. Cloth Config's 1.21.11 release declares its access
-widener in the intermediary namespace, and 1.21.11 ships non-obfuscated, so Loom
-refuses to apply it and the build cannot depend on Cloth at all. Everything else is
-identical: same modules, same hotkeys, same `config/utilitiesscarce.json`, which you
-edit by hand there. Press the settings hotkey and it tells you where the file is.
+The one thing to know if you touch that build: 1.21.11 still ships an obfuscated
+client and so needs Loom's `net.fabricmc.fabric-loom-remap` plugin with Mojang
+mappings, where 26.2 uses plain `net.fabricmc.fabric-loom` and no mappings. Point
+the non-remapping plugin at 1.21.11 and it configures without complaint, then hands
+the compiler obfuscated classes.
 
 ## Requirements
 
 | | |
 | --- | --- |
-| Minecraft | 26.2 |
+| Minecraft | 26.2, or 1.21.11 |
 | Fabric Loader | 0.19.3+ |
-| Fabric API | 0.158.0+26.2 |
-| Java | 25 |
+| Fabric API | 0.158.0+26.2, or 0.141.6+1.21.11 |
+| Java | 25 for 26.2, 21 for 1.21.11 |
 | [Cloth Config](https://modrinth.com/mod/cloth-config) | optional — needed for the settings screen |
 | [Mod Menu](https://modrinth.com/mod/modmenu) | optional — adds the Config button in the mod list |
 
