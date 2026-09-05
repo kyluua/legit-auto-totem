@@ -32,9 +32,10 @@ jobs:
       - name: Build for 26.2
         run: ./gradlew build --stacktrace
 
-      # Non-blocking: the 1.21.11 toolchain is currently broken upstream (see
-      # versions/1.21.11/README.md). A failure there must not stop the 26.2 jar
-      # from shipping.
+      # Non-blocking while the port is still being brought up: a failure here
+      # must not stop the 26.2 jar from shipping. The filtered compiler output
+      # is written to a file that ships alongside the jars, so a failure can be
+      # read without pulling the whole run log.
       - name: Build for 1.21.11
         id: build_1_21_11
         continue-on-error: true
@@ -42,13 +43,17 @@ jobs:
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
         run: |
           set +e
-          ./gradlew -p versions/1.21.11 build > /tmp/build-1-21-11.log 2>&1
+          mkdir -p dist
+          ./gradlew -p versions/1.21.11 build --console=plain > /tmp/build-1-21-11.log 2>&1
           status=$?
-          echo "=== gradle exit: $status ==="
-          # Gradle buries compiler output under a long stack trace; surface just
-          # the useful lines so a failure is readable without the whole log.
-          grep -E "error:|cannot find symbol|symbol:|location:|required:|found:|reason:|^> Task|BUILD (FAILED|SUCCESSFUL)" \
-            /tmp/build-1-21-11.log | head -100
+          {
+            echo "=== gradle exit: $status ==="
+            # Gradle buries compiler output under a long stack trace; keep just
+            # the useful lines.
+            grep -E "error:|warning:|cannot find symbol|symbol:|location:|required:|found:|reason:|^> Task|BUILD (FAILED|SUCCESSFUL)" \
+              /tmp/build-1-21-11.log
+          } > dist/1.21.11-build.txt
+          head -60 dist/1.21.11-build.txt
           exit $status
 
       - name: Collect jars
@@ -73,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: utilities-scarce
-          path: dist/*.jar
+          path: dist/*
           if-no-files-found: error
 
       # Also park the jars on an orphan "dist" branch, so they can be
@@ -82,14 +87,14 @@ jobs:
         run: |
           set -eu
           work=$(mktemp -d)
-          cp dist/*.jar "$work/"
+          cp dist/* "$work/"
           cd "$work"
           git init -q
           git checkout -q -b dist
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "Jars built from ${GITHUB_SHA}"
+          git commit -q -m "Built from ${GITHUB_SHA}"
           git push -q --force \
             "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" dist
         env:

@@ -1,9 +1,7 @@
 package dev.kyluua.utilitiesscarce.render;
 
-import java.util.Optional;
-
-import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
 
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.LayeringTransform;
@@ -17,20 +15,23 @@ import net.minecraft.resources.Identifier;
  *
  * <p>Both are built from vanilla's own line snippet, so they reuse the stock
  * line shaders and no shader assets ship with the mod. The only difference
- * between them is the depth state: dropping it entirely is what draws a box
+ * between them is the depth test: switching it off entirely is what draws a box
  * through terrain.
+ *
+ * <p>26.2 spells this as a DepthStencilState on the pipeline builder; 1.21.11
+ * has the older DepthTestFunction.
  */
 public final class EspRenderTypes {
 	private static final RenderPipeline DEPTH_TESTED_LINES = RenderPipelines.register(
 			RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
 					.withLocation(Identifier.parse("utilitiesscarce:pipeline/lines"))
-					.withDepthStencilState(DepthStencilState.DEFAULT)
+					.withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
 					.build());
 
 	private static final RenderPipeline THROUGH_WALL_LINES = RenderPipelines.register(
 			RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
 					.withLocation(Identifier.parse("utilitiesscarce:pipeline/lines_through_walls"))
-					.withDepthStencilState(Optional.empty())
+					.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
 					.build());
 
 	private static final RenderType LINES =
