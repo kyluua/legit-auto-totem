@@ -1,49 +1,38 @@
 package dev.kyluua.utilitiesscarce.gui;
 
+import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.util.Notifier;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * Entry point for the settings screen.
+ * Settings entry point for the 1.21.11 build, which has no settings screen.
  *
- * <p>Cloth Config is optional, so its classes are only reached through
- * {@link ClothConfigScreenFactory}; that class is not loaded at all until the
- * mod has been confirmed present, which keeps the mod working without it.
+ * <p>Cloth Config's 1.21.11 release declares its access widener in the
+ * intermediary namespace. 1.21.11 ships non-obfuscated, so Loom refuses to
+ * apply it and the build cannot depend on Cloth at all. Rather than hand-roll a
+ * screen against widget APIs that differ again between these versions, this
+ * build configures from the JSON file and the hotkeys, both of which work
+ * exactly as they do on 26.2.
  */
 public final class ConfigScreens {
-	private static final String CLOTH_CONFIG = "cloth-config";
-
 	private ConfigScreens() {
 	}
 
 	public static boolean available() {
-		return FabricLoader.getInstance().isModLoaded(CLOTH_CONFIG);
+		return false;
 	}
 
-	/** The settings screen, or {@code null} when Cloth Config is missing. */
+	/** Always {@code null} here; see the class note. */
 	public static Screen create(Screen parent) {
-		if (!available()) {
-			return null;
-		}
-
-		return ClothConfigScreenFactory.create(parent);
+		return null;
 	}
 
-	/** Opens the settings screen, explaining in chat if it cannot be built. */
+	/** Points at the config file, since there is no screen to open. */
 	public static void open(Minecraft minecraft) {
-		Screen screen = create(minecraft.screen);
-
-		if (screen == null) {
-			Notifier.send(Component.literal(
-							"Install Cloth Config for the settings screen. Until then, edit config/utilitiesscarce.json.")
-					.withStyle(ChatFormatting.YELLOW));
-			return;
-		}
-
-		minecraft.setScreen(screen);
+		Notifier.send(Component.literal("Settings for this build live in " + ConfigManager.path()
+				+ " -- the hotkeys work as normal.").withStyle(ChatFormatting.YELLOW));
 	}
 }

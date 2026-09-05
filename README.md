@@ -183,6 +183,23 @@ Defaults sit on the numeric keypad, which vanilla leaves unbound. Rebind them in
 Toggling writes straight to the config file, so hotkeys and the settings screen always
 agree.
 
+## Minecraft versions
+
+| Version | Where | Settings screen |
+| --- | --- | --- |
+| **26.2** | repository root | Mod Menu + Cloth Config |
+| **1.21.11** | `versions/1.21.11/` | JSON file + hotkeys only |
+
+Both build from this branch and CI publishes both jars. The 1.21.11 build is a
+separate Gradle project rather than a shared source tree, so a change to a module
+has to be made in both places.
+
+1.21.11 has no settings screen. Cloth Config's 1.21.11 release declares its access
+widener in the intermediary namespace, and 1.21.11 ships non-obfuscated, so Loom
+refuses to apply it and the build cannot depend on Cloth at all. Everything else is
+identical: same modules, same hotkeys, same `config/utilitiesscarce.json`, which you
+edit by hand there. Press the settings hotkey and it tells you where the file is.
+
 ## Requirements
 
 | | |

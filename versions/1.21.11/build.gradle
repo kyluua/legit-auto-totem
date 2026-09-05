@@ -27,18 +27,11 @@ dependencies {
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
+	// No Cloth Config here: its 1.21.11 release declares an access widener in
+	// the intermediary namespace, and 1.21.11 ships non-obfuscated, so Loom
+	// refuses to apply it. This build configures from JSON and hotkeys instead.
 	compileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
 		transitive(false)
-	}
-	localRuntime("com.terraformersmc:modmenu:${project.modmenu_version}") {
-		transitive(false)
-	}
-
-	compileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
-		exclude(group: 'net.fabricmc.fabric-api')
-	}
-	localRuntime("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
-		exclude(group: 'net.fabricmc.fabric-api')
 	}
 }
 
