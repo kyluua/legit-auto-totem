@@ -22,16 +22,27 @@ repositories {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	// Loom is pinned rather than tracking 1.17-SNAPSHOT: the current snapshot
-	// treats 1.21.11 as non-obfuscated, while the last Fabric API published for
-	// 1.21.11 declares its access wideners in the intermediary namespace, and
-	// the two refuse to meet. An older patch still sees 1.21.11 the old way.
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	// No mappings line: 1.21.11 ships non-obfuscated, so its Mojang names are
+	// already the real ones and Loom refuses to be told to remap to them.
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Only the Fabric API modules this mod actually uses, rather than the whole
+	// bundle. Several bundled modules -- fabric-biome-api-v1 among them --
+	// declare access wideners in the intermediary namespace, which Loom refuses
+	// to apply to a non-obfuscated game, and that failure kills the build even
+	// though this mod never touches those modules. None of the four below
+	// carries one. Non-transitive so none creeps back in.
+	["fabric-api-base",
+	 "fabric-key-binding-api-v1",
+	 "fabric-events-interaction-v0",
+	 "fabric-rendering-v1"].each { moduleName ->
+		implementation(fabricApi.module(moduleName, project.fabric_api_version)) {
+			transitive = false
+		}
+	}
 
 	// No Cloth Config on this build, so no settings screen; see ConfigScreens.
-	modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
+	compileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
 		transitive(false)
 	}
 }
