@@ -71,7 +71,9 @@ public final class EspModule extends Module {
 			return;
 		}
 
-		Vec3 camera = context.worldState().cameraRenderState.pos;
+		// 26.2 reads this off the level render state; here it comes straight
+		// from the camera, which Free Cam has already moved.
+		Vec3 camera = context.gameRenderer().getMainCamera().position();
 		PoseStack poseStack = context.matrices();
 		float width = (float) Math.max(0.5D, esp.lineWidth);
 

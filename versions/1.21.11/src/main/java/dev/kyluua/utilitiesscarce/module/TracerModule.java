@@ -74,7 +74,9 @@ public final class TracerModule extends Module {
 			return;
 		}
 
-		Vec3 camera = context.worldState().cameraRenderState.pos;
+		// 26.2 reads this off the level render state; here it comes straight
+		// from the camera, which Free Cam has already moved.
+		Vec3 camera = context.gameRenderer().getMainCamera().position();
 		Vec3 start = lineOrigin(player, camera, tracer);
 		PoseStack poseStack = context.matrices();
 		float width = (float) Math.max(0.5D, tracer.lineWidth);
