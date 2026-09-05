@@ -21,16 +21,17 @@ repositories {
 }
 
 dependencies {
-	// No mappings line: 1.21.11 ships non-obfuscated, so the Mojang names are
-	// already the real ones and Loom refuses to be told to remap to them.
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	// Loom is pinned rather than tracking 1.17-SNAPSHOT: the current snapshot
+	// treats 1.21.11 as non-obfuscated, while the last Fabric API published for
+	// 1.21.11 declares its access wideners in the intermediary namespace, and
+	// the two refuse to meet. An older patch still sees 1.21.11 the old way.
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	// No Cloth Config here: its 1.21.11 release declares an access widener in
-	// the intermediary namespace, and 1.21.11 ships non-obfuscated, so Loom
-	// refuses to apply it. This build configures from JSON and hotkeys instead.
-	compileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
+	// No Cloth Config on this build, so no settings screen; see ConfigScreens.
+	modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
 		transitive(false)
 	}
 }
