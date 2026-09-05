@@ -1,5 +1,10 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	// 1.21.11 still ships an obfuscated client, so this build needs the
+	// remapping flavour of Loom. The plain 'net.fabricmc.fabric-loom' plugin
+	// used by the 26.2 build only handles the non-obfuscated jars Mojang
+	// started shipping later: point it at 1.21.11 and it hands javac the
+	// obfuscated classes, so nothing under net.minecraft resolves.
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 }
 
 version = project.mod_version
@@ -14,35 +19,16 @@ repositories {
 		name = 'TerraformersMC'
 		url = 'https://maven.terraformersmc.com/'
 	}
-	maven {
-		name = 'shedaniel'
-		url = 'https://maven.shedaniel.me/'
-	}
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	// No mappings line: 1.21.11 ships non-obfuscated, so its Mojang names are
-	// already the real ones and Loom refuses to be told to remap to them.
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Only the Fabric API modules this mod actually uses, rather than the whole
-	// bundle. Several bundled modules -- fabric-biome-api-v1 among them --
-	// declare access wideners in the intermediary namespace, which Loom refuses
-	// to apply to a non-obfuscated game, and that failure kills the build even
-	// though this mod never touches those modules. None of the four below
-	// carries one. Non-transitive so none creeps back in.
-	["fabric-api-base",
-	 "fabric-key-binding-api-v1",
-	 "fabric-events-interaction-v0",
-	 "fabric-rendering-v1"].each { moduleName ->
-		implementation(fabricApi.module(moduleName, project.fabric_api_version)) {
-			transitive = false
-		}
-	}
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	// No Cloth Config on this build, so no settings screen; see ConfigScreens.
-	compileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
+	modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
 		transitive(false)
 	}
 }

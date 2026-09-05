@@ -5,6 +5,7 @@ import dev.kyluua.utilitiesscarce.keybind.Keybinds;
 import dev.kyluua.utilitiesscarce.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
 import dev.kyluua.utilitiesscarce.render.EspRenderTypes;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
@@ -25,22 +26,17 @@ public final class UtilitiesScarceClient implements ClientModInitializer {
 		return MODULES;
 	}
 
-	/**
-	 * Called from {@code MinecraftMixin} at the end of every client tick. This
-	 * build drives ticking itself rather than through Fabric's lifecycle
-	 * events; see that mixin for why.
-	 */
-	public static void onEndClientTick(Minecraft minecraft) {
-		Keybinds.handle(minecraft, MODULES);
-		MODULES.onClientTick(minecraft);
-	}
-
 	@Override
 	public void onInitializeClient() {
 		ConfigManager.load();
 		Keybinds.register(MODULES);
 		// Register the line pipelines now rather than partway through a frame.
 		EspRenderTypes.bootstrap();
+
+		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			Keybinds.handle(client, MODULES);
+			MODULES.onClientTick(client);
+		});
 
 		// Late in the pass, so highlights sit on top of the world.
 		WorldRenderEvents.BEFORE_TRANSLUCENT.register(MODULES::onLevelRender);
