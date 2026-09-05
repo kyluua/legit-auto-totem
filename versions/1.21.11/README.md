@@ -43,10 +43,13 @@ The two source trees are otherwise the same mod. What changed:
 - a `SectionOcclusionGraph` mixin for seeing through chunks, which 26.2 gets
   from `CameraRenderState.smartCull`
 
-## No settings screen here
+## Optional integrations
 
-Cloth Config builds the settings screen on 26.2. This build leaves it out, so
-`ConfigScreens.available()` returns false and the Mod Menu entry has no config
-button; the modules are still fully configurable by editing
-`config/utilitiesscarce.json`, and every one of them is still bound to a
-hotkey.
+Same as 26.2: Mod Menu puts a Config button next to the mod, and Cloth Config
+builds the screen behind it. Both are compile-only, and neither is touched
+until `ConfigScreens` has confirmed the mod is loaded, so the mod runs without
+them -- with the settings then living in `config/utilitiesscarce.json`. The
+hotkeys work either way.
+
+Cloth Config numbers its releases `<mc version without the leading 1.>.<build>`,
+so the 1.21.11 line is `21.11.x` where 26.2's is `26.2.x`.

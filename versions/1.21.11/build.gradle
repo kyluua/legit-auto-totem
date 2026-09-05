@@ -15,9 +15,15 @@ base {
 }
 
 repositories {
+	// Mod Menu -- provides the "Config" button next to the mod in the mod list.
 	maven {
 		name = 'TerraformersMC'
 		url = 'https://maven.terraformersmc.com/'
+	}
+	// Cloth Config -- builds the settings screen itself.
+	maven {
+		name = 'shedaniel'
+		url = 'https://maven.shedaniel.me/'
 	}
 }
 
@@ -27,9 +33,15 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	// No Cloth Config on this build, so no settings screen; see ConfigScreens.
+	// Both integrations are optional at runtime -- see ModMenuIntegration and
+	// ClothConfigScreenFactory, which are only touched when the mods are
+	// present.
 	modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
 		transitive(false)
+	}
+
+	modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		exclude(group: 'net.fabricmc.fabric-api')
 	}
 }
 
