@@ -40,7 +40,16 @@ jobs:
         continue-on-error: true
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
-        run: ./gradlew -p versions/1.21.11 build --stacktrace
+        run: |
+          set +e
+          ./gradlew -p versions/1.21.11 build > /tmp/build-1-21-11.log 2>&1
+          status=$?
+          echo "=== gradle exit: $status ==="
+          # Gradle buries compiler output under a long stack trace; surface just
+          # the useful lines so a failure is readable without the whole log.
+          grep -E "error:|cannot find symbol|symbol:|location:|required:|found:|reason:|^> Task|BUILD (FAILED|SUCCESSFUL)" \
+            /tmp/build-1-21-11.log | head -100
+          exit $status
 
       - name: Collect jars
         run: |
