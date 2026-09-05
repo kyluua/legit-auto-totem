@@ -32,6 +32,27 @@ jobs:
       - name: Build for 26.2
         run: ./gradlew build --stacktrace
 
+      # The runner can reach these mavens; this sandbox cannot. Recording the
+      # published version lists here is how the 1.21.11 build learns which
+      # Cloth Config and Mod Menu releases target it.
+      - name: Probe optional dependency versions
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p dist
+          {
+            for url in \
+              https://maven.shedaniel.me/me/shedaniel/cloth/cloth-config-fabric/maven-metadata.xml \
+              https://maven.terraformersmc.com/releases/com/terraformersmc/modmenu/maven-metadata.xml; do
+              echo "=== $url"
+              curl -sS --max-time 30 "$url" \
+                | grep -oE '<version>[^<]+</version>' \
+                | sed 's|</\?version>||g' \
+                | tail -45
+            done
+          } > dist/dep-versions.txt 2>&1
+          cat dist/dep-versions.txt
+
       # Non-blocking while the port is still being brought up: a failure here
       # must not stop the 26.2 jar from shipping. The filtered compiler output
       # is written to a file that ships alongside the jars, so a failure can be

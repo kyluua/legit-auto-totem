@@ -3,7 +3,6 @@ package dev.kyluua.utilitiesscarce.util;
 import dev.kyluua.utilitiesscarce.UtilitiesScarce;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 
 /** Short client-side chat messages, prefixed with the mod name. */
@@ -12,13 +11,15 @@ public final class Notifier {
 	}
 
 	public static void send(Component message) {
-		LocalPlayer player = Minecraft.getInstance().player;
+		Minecraft minecraft = Minecraft.getInstance();
 
-		if (player == null) {
+		// Only in-world, and only once the HUD exists: 26.2 goes through the
+		// player, which on this version has no client-side system message.
+		if (minecraft.player == null || minecraft.gui == null) {
 			return;
 		}
 
-		player.sendSystemMessage(Component.literal("[" + UtilitiesScarce.MOD_NAME + "] ")
+		minecraft.gui.getChat().addMessage(Component.literal("[" + UtilitiesScarce.MOD_NAME + "] ")
 				.withStyle(ChatFormatting.GRAY)
 				.append(message));
 	}
