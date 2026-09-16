@@ -23,7 +23,9 @@ import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
 public class AtmosphericFogEnvironmentMixin {
 	private static final float FAR = 1.0E6F;
 
-	@Inject(method = "setupFog", at = @At("RETURN"))
+	// require = 0 for the same reason as FogRendererMixin: a miss leaves the
+	// haze alone rather than refusing to launch.
+	@Inject(method = "setupFog", at = @At("RETURN"), require = 0)
 	private void utilitiesscarce$clearHaze(FogData data, Camera camera, ClientLevel level,
 			float viewDistance, DeltaTracker deltaTracker, CallbackInfo callback) {
 		if (!FreeCamState.unlimitedView()) {

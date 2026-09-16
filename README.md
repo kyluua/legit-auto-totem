@@ -117,6 +117,10 @@ your selected render distance nothing is held back. It does not reach past that
 distance: chunks the client has never been sent are still not there to draw, which is
 what `Max distance from body` is for.
 
+The two fog injectors are deliberately optional (`require = 0`). Everything else in the
+mixin file is required, so a target that moved in a game update would refuse to launch;
+fog is cosmetic, and a miss there leaves the fog alone rather than costing you the game.
+
 `Snap back on damage`
 is on by default, so a mob or a lava pocket drops you back into your body rather than
 letting you die watching scenery.

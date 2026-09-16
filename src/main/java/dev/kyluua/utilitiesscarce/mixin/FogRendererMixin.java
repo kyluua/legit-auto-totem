@@ -21,7 +21,12 @@ public class FogRendererMixin {
 	/** Chunks. Far enough that no fog band falls inside the real distance. */
 	private static final int UNLIMITED_CHUNKS = 1024;
 
-	@ModifyVariable(method = "setupFog", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+	// require = 0: the whole mixins file is defaultRequire 1, which turns a
+	// target that stopped matching into a crash at launch. Fog is cosmetic and
+	// must never cost anyone their game, so a miss here is a no-op instead --
+	// the fog simply stays.
+	@ModifyVariable(method = "setupFog", at = @At("HEAD"), argsOnly = true, ordinal = 0,
+			require = 0)
 	private int utilitiesscarce$extendFogDistance(int renderDistanceInChunks) {
 		if (!FreeCamState.unlimitedView()) {
 			return renderDistanceInChunks;
