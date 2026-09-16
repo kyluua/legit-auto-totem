@@ -7,6 +7,7 @@ import dev.kyluua.utilitiesscarce.util.InventoryHelper;
 import dev.kyluua.utilitiesscarce.util.ItemHelper;
 import dev.kyluua.utilitiesscarce.util.Sequence;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 
 /**
@@ -16,6 +17,12 @@ import net.minecraft.client.player.LocalPlayer;
  * that held one is suddenly empty -- which is what a pop looks like from the
  * client's side -- a replacement is moved in from the rest of the inventory,
  * into that same hotbar slot or back into the offhand.
+ *
+ * <p>In legit mode the refill goes the way a player does it: open the
+ * inventory, move the totem, close the inventory, with a beat between each
+ * step. The server then sees a real inventory session around the click instead
+ * of a container click arriving out of nowhere, at the cost of the screen being
+ * up for a few ticks.
  */
 public final class AutoTotemModule extends Module {
 	private static final String OWNER = "auto_totem";
@@ -33,6 +40,8 @@ public final class AutoTotemModule extends Module {
 	private int damageTimer;
 	private int pendingSlot = NO_SLOT;
 	private int pendingTicks;
+	/** The inventory screen this module opened, while legit mode has one up. */
+	private Screen openedScreen;
 
 	public AutoTotemModule(ActionScheduler scheduler) {
 		super("auto_totem", scheduler);
@@ -55,6 +64,7 @@ public final class AutoTotemModule extends Module {
 		damageTimer = 0;
 		pendingSlot = NO_SLOT;
 		pendingTicks = 0;
+		closeIfOpen(Minecraft.getInstance());
 	}
 
 	@Override
@@ -176,31 +186,53 @@ public final class AutoTotemModule extends Module {
 		pendingTicks = PENDING_TIMEOUT_TICKS;
 
 		Sequence sequence = new Sequence()
-				.require(() -> minecraft.player != null && InventoryHelper.canClickInventory(minecraft))
-				.run(config.delayTicks, () -> {
-					// Re-resolve the source: the inventory may have shifted
-					// during the delay.
-					LocalPlayer current = minecraft.player;
+				.require(() -> minecraft.player != null && InventoryHelper.canClickInventory(minecraft));
 
-					if (current == null) {
-						return;
-					}
-
-					int from = InventoryHelper.find(current, ItemHelper::isTotem, config.searchOrder);
-
-					if (from == -1 || from == target) {
-						return;
-					}
-
-					boolean moved = target == InventoryHelper.OFFHAND_TARGET
-							? InventoryHelper.moveToOffhand(minecraft, from, config.swapMethod)
-							: InventoryHelper.moveToHotbarSlot(minecraft, from, target, config.swapMethod);
-
-					if (moved) {
-						announce(displayName());
-					}
-				});
+		if (config.legitMode) {
+			sequence.run(config.openDelayTicks, () -> openedScreen =
+					InventoryHelper.openOwnInventory(minecraft));
+			sequence.run(config.clickDelayTicks, () -> move(minecraft, config, target));
+			sequence.run(config.closeDelayTicks, () -> closeIfOpen(minecraft));
+			// A pop that arrives mid-sequence, or leaving the world, must not
+			// leave the inventory hanging open.
+			sequence.onAbort(() -> closeIfOpen(minecraft));
+		} else {
+			sequence.run(config.delayTicks, () -> move(minecraft, config, target));
+		}
 
 		scheduler.submit(OWNER, sequence);
+	}
+
+	/** Moves a totem into {@code target}, re-resolving the source first. */
+	private void move(Minecraft minecraft, UtilitiesScarceConfig.AutoTotem config, int target) {
+		// The inventory may have shifted while the sequence was waiting.
+		LocalPlayer current = minecraft.player;
+
+		if (current == null) {
+			return;
+		}
+
+		int from = InventoryHelper.find(current, ItemHelper::isTotem, config.searchOrder);
+
+		if (from == -1 || from == target) {
+			return;
+		}
+
+		boolean moved = target == InventoryHelper.OFFHAND_TARGET
+				? InventoryHelper.moveToOffhand(minecraft, from, config.swapMethod)
+				: InventoryHelper.moveToHotbarSlot(minecraft, from, target, config.swapMethod);
+
+		if (moved) {
+			announce(displayName());
+		}
+	}
+
+	private void closeIfOpen(Minecraft minecraft) {
+		if (openedScreen == null) {
+			return;
+		}
+
+		InventoryHelper.closeOwnInventory(minecraft, openedScreen);
+		openedScreen = null;
 	}
 }

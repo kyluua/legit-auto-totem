@@ -5,13 +5,15 @@ import java.util.function.Predicate;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SearchOrder;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SwapMethod;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Slot arithmetic and the container clicks used to move items around without
- * opening the inventory screen.
+ * Slot arithmetic, the container clicks that move items around, and opening and
+ * closing the player's own inventory screen.
  *
  * <p>Two numbering schemes are in play. {@code Inventory} indices run 0-8 for
  * the hotbar and 9-35 for the three storage rows. The container protocol used
@@ -104,11 +106,56 @@ public final class InventoryHelper {
 	}
 
 	/**
-	 * Container clicks address the player's own menu, so they are only valid
-	 * while no other screen owns the cursor.
+	 * Container clicks address the player's own menu, so they are valid with no
+	 * screen open at all and while that same menu is on screen -- which is what
+	 * Auto Totem's legit mode relies on. Any other screen owns a different menu,
+	 * and a click sent then would be addressed to the wrong container.
 	 */
 	public static boolean canClickInventory(Minecraft minecraft) {
-		return minecraft.player != null && minecraft.gameMode != null && minecraft.gui.screen() == null;
+		if (minecraft.player == null || minecraft.gameMode == null) {
+			return false;
+		}
+
+		Screen screen = minecraft.gui.screen();
+		return screen == null || screen instanceof InventoryScreen;
+	}
+
+	/**
+	 * Opens the player's own inventory, exactly as pressing the inventory key
+	 * does. Nothing is sent to the server by opening it; the close is what the
+	 * server sees.
+	 *
+	 * @return the screen that was opened, to be handed back to
+	 *         {@link #closeOwnInventory(Minecraft, Screen)}, or {@code null} if
+	 *         it could not be opened
+	 */
+	public static Screen openOwnInventory(Minecraft minecraft) {
+		LocalPlayer player = minecraft.player;
+
+		if (player == null || minecraft.gui.screen() != null) {
+			return null;
+		}
+
+		InventoryScreen screen = new InventoryScreen(player);
+		minecraft.gui.setScreen(screen);
+		return screen;
+	}
+
+	/**
+	 * Closes the inventory, but only while the screen opened earlier is still
+	 * the one on top -- otherwise a screen the player opened in the meantime
+	 * would be closed out from under them.
+	 */
+	public static void closeOwnInventory(Minecraft minecraft, Screen opened) {
+		LocalPlayer player = minecraft.player;
+
+		if (player == null || opened == null || minecraft.gui.screen() != opened) {
+			return;
+		}
+
+		// Goes through the player rather than clearing the screen directly, so
+		// the container-close packet is sent just as it would be by hand.
+		player.closeContainer();
 	}
 
 	private static void click(Minecraft minecraft, int networkSlot, int button, ContainerInput input) {

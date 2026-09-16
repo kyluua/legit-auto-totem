@@ -34,6 +34,7 @@ public final class ModuleManager {
 	private final BreachSwapModule breachSwap;
 	private final FastAnchorModule fastAnchor;
 	private final FreeCamModule freeCam;
+	private final AutoCrystalModule autoCrystal;
 	private final EspModule esp;
 	private final TracerModule tracer;
 
@@ -54,6 +55,7 @@ public final class ModuleManager {
 		breachSwap = new BreachSwapModule(scheduler);
 		fastAnchor = new FastAnchorModule(scheduler);
 		freeCam = new FreeCamModule(scheduler);
+		autoCrystal = new AutoCrystalModule(scheduler);
 		esp = new EspModule(scheduler, blockScanner);
 		tracer = new TracerModule(scheduler, blockScanner);
 
@@ -65,6 +67,9 @@ public final class ModuleManager {
 		modules.add(freeCam);
 		modules.add(esp);
 		modules.add(tracer);
+		// Appended rather than slotted in: the toggle keys are handed out in
+		// this order, so inserting here would move every key after it.
+		modules.add(autoCrystal);
 
 		attackPriority.add(stunSlam);
 		attackPriority.add(shieldDisable);

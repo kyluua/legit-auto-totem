@@ -56,6 +56,14 @@ public final class ClientActions {
 
 	/** Right-clicks a block face with the currently selected item. */
 	public static void useItemOn(Minecraft minecraft, BlockHitResult hitResult) {
+		useItemOn(minecraft, InteractionHand.MAIN_HAND, hitResult);
+	}
+
+	/**
+	 * Right-clicks a block face with the item in the given hand. Using the
+	 * offhand is what lets Auto Crystal place without touching the hotbar.
+	 */
+	public static void useItemOn(Minecraft minecraft, InteractionHand hand, BlockHitResult hitResult) {
 		LocalPlayer player = minecraft.player;
 
 		if (player == null || minecraft.gameMode == null || hitResult == null) {
@@ -63,15 +71,14 @@ public final class ClientActions {
 		}
 
 		runSynthetic(() -> {
-			InteractionResult result =
-					minecraft.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hitResult);
+			InteractionResult result = minecraft.gameMode.useItemOn(player, hand, hitResult);
 
 			// Vanilla swings only when the interaction asks for it. Swinging
 			// regardless costs a packet per use and animates clicks that the
 			// server refused.
 			if (result instanceof InteractionResult.Success success
 					&& success.swingSource() == InteractionResult.SwingSource.CLIENT) {
-				player.swing(InteractionHand.MAIN_HAND);
+				player.swing(hand);
 			}
 		});
 	}

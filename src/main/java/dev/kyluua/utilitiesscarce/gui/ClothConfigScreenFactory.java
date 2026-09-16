@@ -2,6 +2,7 @@ package dev.kyluua.utilitiesscarce.gui;
 
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
+import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.AnchorMode;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.AnchorSwapTarget;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.ColorMode;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SearchOrder;
@@ -41,6 +42,7 @@ public final class ClothConfigScreenFactory {
 		addBreachSwap(builder, entries, config);
 		addFastAnchor(builder, entries, config);
 		addFreeCam(builder, entries, config);
+		addAutoCrystal(builder, entries, config);
 		addTargets(builder, entries, config);
 		addEsp(builder, entries, config);
 		addTracer(builder, entries, config);
@@ -114,8 +116,35 @@ public final class ClothConfigScreenFactory {
 				.setSaveConsumer(value -> module.requireRecentDamage = value)
 				.build());
 
+		category.addEntry(entries.startBooleanToggle(option("legit_mode"), module.legitMode)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal(
+						"Open the inventory, move the totem, close it -- what a player does. "
+								+ "Off sends the move on its own, which is faster but looks like nothing a hand could do."))
+				.setSaveConsumer(value -> module.legitMode = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("open_delay_ticks"), module.openDelayTicks, 0, 20)
+				.setDefaultValue(2)
+				.setTooltip(Component.literal("Legit mode only."))
+				.setSaveConsumer(value -> module.openDelayTicks = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("click_delay_ticks"), module.clickDelayTicks, 0, 20)
+				.setDefaultValue(2)
+				.setTooltip(Component.literal("Legit mode only. How long the inventory sits open first."))
+				.setSaveConsumer(value -> module.clickDelayTicks = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("close_delay_ticks"), module.closeDelayTicks, 0, 20)
+				.setDefaultValue(2)
+				.setTooltip(Component.literal("Legit mode only."))
+				.setSaveConsumer(value -> module.closeDelayTicks = value)
+				.build());
+
 		category.addEntry(entries.startIntSlider(option("delay_ticks"), module.delayTicks, 0, 20)
 				.setDefaultValue(0)
+				.setTooltip(Component.literal("Used when legit mode is off."))
 				.setSaveConsumer(value -> module.delayTicks = value)
 				.build());
 
@@ -618,9 +647,88 @@ public final class ClothConfigScreenFactory {
 				.setSaveConsumer(value -> module.maxDistance = value)
 				.build());
 
+		category.addEntry(entries.startBooleanToggle(option("unlimited_view"), module.unlimitedView)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal(
+						"Drops distance fog, the atmospheric haze and chunk occlusion culling while flying, "
+								+ "so everything the render distance holds is drawn."))
+				.setSaveConsumer(value -> module.unlimitedView = value)
+				.build());
+
 		category.addEntry(entries.startBooleanToggle(option("disable_on_damage"), module.disableOnDamage)
 				.setDefaultValue(true)
 				.setSaveConsumer(value -> module.disableOnDamage = value)
+				.build());
+	}
+
+	private static void addAutoCrystal(ConfigBuilder builder, ConfigEntryBuilder entries,
+			UtilitiesScarceConfig config) {
+		ConfigCategory category = category(builder, "text.utilitiesscarce.module.auto_crystal");
+		UtilitiesScarceConfig.AutoCrystal module = config.autoCrystal;
+
+		category.addEntry(entries.startBooleanToggle(option("enabled"), module.enabled)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> module.enabled = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("use_offhand"), module.useOffhand)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal(
+						"With a crystal in the offhand nothing touches the hotbar, so the main hand is "
+								+ "never disturbed."))
+				.setSaveConsumer(value -> module.useOffhand = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("require_use_key"), module.requireUseKey)
+				.setDefaultValue(false)
+				.setTooltip(Component.literal(
+						"Off places whenever the crosshair rests on a valid block."))
+				.setSaveConsumer(value -> module.requireUseKey = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("allow_bedrock"), module.allowBedrock)
+				.setDefaultValue(true)
+				.setSaveConsumer(value -> module.allowBedrock = value)
+				.build());
+
+		category.addEntry(entries.startDoubleField(option("max_range"), module.maxRange)
+				.setDefaultValue(4.5D)
+				.setSaveConsumer(value -> module.maxRange = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("cooldown_ticks"), module.cooldownTicks, 1, 40)
+				.setDefaultValue(4)
+				.setTooltip(Component.literal("Minimum gap between placements."))
+				.setSaveConsumer(value -> module.cooldownTicks = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("place_delay_ticks"),
+						module.placeDelayTicks, 0, 20)
+				.setDefaultValue(0)
+				.setSaveConsumer(value -> module.placeDelayTicks = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("restore_slot"), module.restoreSlot)
+				.setDefaultValue(true)
+				.setTooltip(Component.literal("Puts the sword -- or whatever was in hand -- straight back."))
+				.setSaveConsumer(value -> module.restoreSlot = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("restore_delay_ticks"),
+						module.restoreDelayTicks, 0, 20)
+				.setDefaultValue(1)
+				.setSaveConsumer(value -> module.restoreDelayTicks = value)
+				.build());
+
+		category.addEntry(entries.startBooleanToggle(option("move_to_hotbar"), module.moveToHotbar)
+				.setDefaultValue(false)
+				.setSaveConsumer(value -> module.moveToHotbar = value)
+				.build());
+
+		category.addEntry(entries.startEnumSelector(option("swap_method"), SwapMethod.class,
+						module.swapMethod)
+				.setDefaultValue(SwapMethod.SWAP)
+				.setSaveConsumer(value -> module.swapMethod = value)
 				.build());
 	}
 
@@ -634,9 +742,25 @@ public final class ClothConfigScreenFactory {
 				.setSaveConsumer(value -> module.enabled = value)
 				.build());
 
+		category.addEntry(entries.startEnumSelector(option("mode"), AnchorMode.class, module.mode)
+				.setDefaultValue(AnchorMode.ASSIST)
+				.setTooltip(Component.literal(
+						"ASSIST puts glowstone in hand and swaps you to a totem after your own first fill, "
+								+ "sending no interaction of its own. AUTO_CHARGE charges the anchor for you."))
+				.setSaveConsumer(value -> module.mode = value)
+				.build());
+
+		category.addEntry(entries.startIntSlider(option("fill_window_ticks"),
+						module.fillWindowTicks, 20, 600)
+				.setDefaultValue(200)
+				.setTooltip(Component.literal("Assist only. How long to wait for you to charge the anchor."))
+				.setSaveConsumer(value -> module.fillWindowTicks = value)
+				.build());
+
 		category.addEntry(entries.startIntSlider(option("charges"), module.charges, 1, 4)
 				.setDefaultValue(1)
-				.setTooltip(Component.literal("One charge is enough to make the anchor explode."))
+				.setTooltip(Component.literal(
+						"Auto Charge only. One charge is enough to make the anchor explode."))
 				.setSaveConsumer(value -> module.charges = value)
 				.build());
 

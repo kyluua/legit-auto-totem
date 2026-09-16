@@ -18,6 +18,7 @@ public final class UtilitiesScarceConfig {
 	public BreachSwap breachSwap = new BreachSwap();
 	public FastAnchor fastAnchor = new FastAnchor();
 	public FreeCam freeCam = new FreeCam();
+	public AutoCrystal autoCrystal = new AutoCrystal();
 	public Targets targets = new Targets();
 	public Esp esp = new Esp();
 	public Tracer tracer = new Tracer();
@@ -49,6 +50,18 @@ public final class UtilitiesScarceConfig {
 		ON_ATTACK,
 		/** As soon as the target under your crosshair meets the conditions. */
 		AUTO
+	}
+
+	/** How Fast Anchor helps once an anchor has been placed. */
+	public enum AnchorMode {
+		/**
+		 * Put glowstone in hand and let you charge the anchor yourself, then
+		 * swap to a totem after your first fill. No interaction is sent by the
+		 * mod at all -- only the two hotbar changes around your own click.
+		 */
+		ASSIST,
+		/** Charge the anchor for you as soon as it lands, then swap. */
+		AUTO_CHARGE
 	}
 
 	/** What Fast Anchor selects once the anchor is charged. */
@@ -85,6 +98,18 @@ public final class UtilitiesScarceConfig {
 		 * around by hand.
 		 */
 		public boolean requireRecentDamage = false;
+		/**
+		 * Open the inventory screen, move the totem, then close it again --
+		 * what a player does by hand. Off, the move is a bare container click
+		 * with no screen, which is faster but nothing like a real one.
+		 */
+		public boolean legitMode = true;
+		/** Ticks between spotting the empty slot and opening the inventory. */
+		public int openDelayTicks = 2;
+		/** Ticks the inventory stays open before the totem is moved. */
+		public int clickDelayTicks = 2;
+		/** Ticks between moving the totem and closing the inventory. */
+		public int closeDelayTicks = 2;
 		/** Ticks between spotting the empty slot and refilling it. */
 		public int delayTicks = 0;
 		/** Minimum ticks between two refills. */
@@ -263,10 +288,23 @@ public final class UtilitiesScarceConfig {
 		public double maxDistance = 0.0D;
 		/** Snap back to the body when something hurts you. */
 		public boolean disableOnDamage = true;
+		/**
+		 * See everything the selected render distance holds while flying:
+		 * distance fog and the atmospheric haze are pushed out of the way, and
+		 * chunk occlusion culling is off, so nothing is hidden by being behind
+		 * something else or by being far from the body.
+		 */
+		public boolean unlimitedView = true;
 	}
 
 	public static final class FastAnchor {
 		public boolean enabled = false;
+		public AnchorMode mode = AnchorMode.ASSIST;
+		/**
+		 * How long Assist waits for you to charge the anchor before it stops
+		 * watching. Twenty ticks is a second.
+		 */
+		public int fillWindowTicks = 200;
 		/** How many glowstone charges to put in. One is enough to detonate. */
 		public int charges = 1;
 		public int chargeDelayTicks = 1;
@@ -279,4 +317,33 @@ public final class UtilitiesScarceConfig {
 		public boolean onlyWhereExplosive = true;
 		public boolean moveToHotbar = false;
 	}
+
+	public static final class AutoCrystal {
+		public boolean enabled = false;
+		/**
+		 * Place from the offhand when a crystal is there. Costs no hotbar
+		 * change at all, so whatever is in the main hand is never disturbed.
+		 */
+		public boolean useOffhand = true;
+		/**
+		 * Place only while the use key is held, rather than whenever the
+		 * crosshair rests on a valid block.
+		 */
+		public boolean requireUseKey = false;
+		/** Bedrock takes a crystal too; obsidian is always allowed. */
+		public boolean allowBedrock = true;
+		/** Ignore blocks further away than this. */
+		public double maxRange = 4.5D;
+		/** Minimum ticks between two placements. */
+		public int cooldownTicks = 4;
+		/** Ticks between selecting the crystal and placing it. */
+		public int placeDelayTicks = 0;
+		/** Put the previous item back in hand after placing. */
+		public boolean restoreSlot = true;
+		public int restoreDelayTicks = 1;
+		/** Allowed to pull a crystal out of the inventory into the hotbar. */
+		public boolean moveToHotbar = false;
+		public SwapMethod swapMethod = SwapMethod.SWAP;
+	}
+
 }

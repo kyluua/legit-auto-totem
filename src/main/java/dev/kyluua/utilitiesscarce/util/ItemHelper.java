@@ -42,6 +42,10 @@ public final class ItemHelper {
 		return stack.is(Items.GLOWSTONE);
 	}
 
+	public static boolean isEndCrystal(ItemStack stack) {
+		return stack.is(Items.END_CRYSTAL);
+	}
+
 	public static boolean isRespawnAnchor(ItemStack stack) {
 		return stack.is(Items.RESPAWN_ANCHOR);
 	}

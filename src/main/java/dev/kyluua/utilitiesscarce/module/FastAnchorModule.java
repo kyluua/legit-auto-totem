@@ -2,6 +2,7 @@ package dev.kyluua.utilitiesscarce.module;
 
 import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig;
+import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.AnchorMode;
 import dev.kyluua.utilitiesscarce.config.UtilitiesScarceConfig.SwapMethod;
 import dev.kyluua.utilitiesscarce.util.ActionScheduler;
 import dev.kyluua.utilitiesscarce.util.ClientActions;
@@ -21,21 +22,35 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Charges a respawn anchor the moment it is placed, then puts a totem back in
- * hand.
+ * Takes the hotbar work out of setting up a respawn anchor.
  *
- * <p>Placement is confirmed by looking for the block rather than assuming it
- * landed, and the charging clicks go through the shared per-tick action budget,
- * so the whole thing costs one glowstone use plus the hotbar changes.
+ * <p>In Assist mode -- the default -- the mod sends no interaction of its own.
+ * Placing an anchor puts glowstone in your hand, you charge it yourself, and
+ * your first fill swaps you to a totem. Two hotbar changes around a click you
+ * made, and nothing else.
+ *
+ * <p>Auto Charge is the older behaviour: the anchor is charged for you the
+ * moment it lands. Faster, but every charge is a use packet the mod sent.
+ *
+ * <p>Either way placement is confirmed by looking for the block rather than
+ * assuming it landed, and the clicks go through the shared per-tick action
+ * budget.
  */
 public final class FastAnchorModule extends Module {
 	/** Ticks to keep looking for the freshly placed anchor. */
 	private static final int PLACEMENT_WINDOW_TICKS = 4;
+	/** Ticks Assist keeps trying to get glowstone into the hand. */
+	private static final int ARM_WINDOW_TICKS = 6;
 	private static final int MAX_CHARGE = 4;
 
 	private BlockPos primaryCandidate;
 	private BlockPos secondaryCandidate;
 	private int placementTimer;
+
+	/** The anchor Assist is waiting for you to charge, if any. */
+	private BlockPos armedAnchor;
+	private int fillTimer;
+	private int armTimer;
 
 	public FastAnchorModule(ActionScheduler scheduler) {
 		super("fast_anchor", scheduler);
@@ -54,6 +69,7 @@ public final class FastAnchorModule extends Module {
 	@Override
 	public void onStop() {
 		clearPending();
+		disarm();
 	}
 
 	@Override
@@ -64,13 +80,26 @@ public final class FastAnchorModule extends Module {
 			return;
 		}
 
-		if (!ItemHelper.isRespawnAnchor(player.getMainHandItem())) {
+		UtilitiesScarceConfig.FastAnchor config = ConfigManager.get().fastAnchor;
+
+		if (ItemHelper.isRespawnAnchor(player.getMainHandItem())) {
+			onAnchorPlaced(minecraft, config, hitResult);
 			return;
 		}
 
-		UtilitiesScarceConfig.FastAnchor config = ConfigManager.get().fastAnchor;
+		// The fill Assist has been waiting for: you charged the anchor
+		// yourself, so the glowstone has done its job.
+		if (armedAnchor != null && ItemHelper.isGlowstone(player.getMainHandItem())
+				&& hitResult.getBlockPos().equals(armedAnchor)) {
+			disarm();
+			swapAfterFill(minecraft, config);
+		}
+	}
 
-		if (config.onlyWhereExplosive && minecraft.level.dimension() == Level.NETHER) {
+	private void onAnchorPlaced(Minecraft minecraft, UtilitiesScarceConfig.FastAnchor config,
+			BlockHitResult hitResult) {
+		if (config.onlyWhereExplosive && minecraft.level != null
+				&& minecraft.level.dimension() == Level.NETHER) {
 			// There an anchor sets your spawn instead of exploding.
 			return;
 		}
@@ -84,6 +113,8 @@ public final class FastAnchorModule extends Module {
 
 	@Override
 	public void onTick(Minecraft minecraft) {
+		tickArmed(minecraft);
+
 		if (placementTimer <= 0) {
 			return;
 		}
@@ -111,9 +142,61 @@ public final class FastAnchorModule extends Module {
 
 		clearPending();
 
-		if (!scheduler.isRunning(HAND_LANE)) {
-			charge(minecraft, anchor, ConfigManager.get().fastAnchor);
+		UtilitiesScarceConfig.FastAnchor config = ConfigManager.get().fastAnchor;
+
+		if (config.mode == AnchorMode.ASSIST) {
+			arm(anchor, config);
+			return;
 		}
+
+		if (!scheduler.isRunning(HAND_LANE)) {
+			charge(minecraft, anchor, config);
+		}
+	}
+
+	/**
+	 * Keeps glowstone in hand for the first few ticks after arming -- one try
+	 * per tick, because a pull out of storage only lands on the tick after it
+	 * is asked for -- and stops watching once the window runs out.
+	 */
+	private void tickArmed(Minecraft minecraft) {
+		if (armedAnchor == null) {
+			return;
+		}
+
+		if (minecraft.player == null || minecraft.level == null || --fillTimer <= 0) {
+			disarm();
+			return;
+		}
+
+		if (armTimer <= 0) {
+			return;
+		}
+
+		armTimer--;
+		UtilitiesScarceConfig.FastAnchor config = ConfigManager.get().fastAnchor;
+		int glowstone = CombatSupport.hotbarSlotFor(minecraft, ItemHelper::isGlowstone,
+				config.moveToHotbar, SwapMethod.SWAP);
+
+		if (glowstone != -1) {
+			InventoryHelper.selectHotbarSlot(minecraft.player, glowstone);
+			armTimer = 0;
+			announce(displayName());
+		} else if (armTimer <= 0) {
+			announce(Component.literal("Fast Anchor: no glowstone available"));
+		}
+	}
+
+	private void arm(BlockPos anchor, UtilitiesScarceConfig.FastAnchor config) {
+		armedAnchor = anchor;
+		fillTimer = Math.max(ARM_WINDOW_TICKS + 1, config.fillWindowTicks);
+		armTimer = ARM_WINDOW_TICKS;
+	}
+
+	private void disarm() {
+		armedAnchor = null;
+		fillTimer = 0;
+		armTimer = 0;
 	}
 
 	/** Returns the position if an anchor with room for more charge is there. */
@@ -136,6 +219,19 @@ public final class FastAnchorModule extends Module {
 		primaryCandidate = null;
 		secondaryCandidate = null;
 		placementTimer = 0;
+	}
+
+	/** Assist's half: your fill happened, so put the swap target in hand. */
+	private void swapAfterFill(Minecraft minecraft, UtilitiesScarceConfig.FastAnchor config) {
+		int originalSlot = minecraft.player == null ? -1
+				: minecraft.player.getInventory().getSelectedSlot();
+
+		Sequence sequence = new Sequence()
+				.require(() -> minecraft.player != null && minecraft.level != null)
+				.run(config.swapDelayTicks, () -> swapAfterCharge(minecraft, config, originalSlot));
+
+		scheduler.submit(HAND_LANE, sequence);
+		announce(displayName());
 	}
 
 	private void charge(Minecraft minecraft, BlockPos anchor, UtilitiesScarceConfig.FastAnchor config) {

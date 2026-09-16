@@ -1,5 +1,6 @@
 package dev.kyluua.utilitiesscarce.util;
 
+import dev.kyluua.utilitiesscarce.config.ConfigManager;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
@@ -28,6 +29,15 @@ public final class FreeCamState {
 
 	public static boolean isActive() {
 		return active;
+	}
+
+	/**
+	 * Whether the renderer should stop hiding things while the camera is away
+	 * from the body. Read from the render thread, so it stays a plain field
+	 * read plus a config lookup.
+	 */
+	public static boolean unlimitedView() {
+		return active && ConfigManager.get().freeCam.unlimitedView;
 	}
 
 	public static float yaw() {

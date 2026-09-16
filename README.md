@@ -1,6 +1,6 @@
 # Utilities Scarce
 
-A client-side Fabric mod for **Minecraft 26.2** with eight utility modules.
+A client-side Fabric mod for **Minecraft 26.2** with nine utility modules.
 Everything is configurable from Mod Menu and every module has its own toggle hotkey.
 
 ## Modules
@@ -11,8 +11,18 @@ Puts a fresh totem back into the exact slot the last one left.
 Every tick the mod records which hand slots hold a totem. When a slot that held one
 is suddenly empty — which is what a pop looks like from the client's side — a
 replacement is moved in from the rest of the inventory, back into that same hotbar
-slot or into the offhand. With the default `SWAP` method that is a single container
-click, so a refill costs one packet.
+slot or into the offhand.
+
+**Legit mode is on by default**: the refill goes the way a player does it — open the
+inventory, wait a beat, move the totem, wait a beat, close the inventory. The server
+sees a real inventory session around the click instead of a container click arriving
+out of nowhere, and it sees the close packet a hand would send. The cost is the screen
+being up for a few ticks, during which you cannot move; the three delays are
+configurable (2 ticks each by default, so six ticks end to end).
+
+Turn legit mode off and the move is sent on its own with no screen at all — with the
+default `SWAP` method that is a single container click, so a refill costs one packet,
+but it looks like nothing a hand could produce.
 
 Notable settings: separate offhand/hotbar toggles, refill delay and cooldown,
 `Keep in reserve` (leave the last N totems alone), `Only after a pop` (require recent
@@ -97,20 +107,57 @@ in Options → Controls moves the camera too, and toggle-sneak and controller mo
 over. Jump and sneak go up and down, sprint applies the speed multiplier.
 `Fly along look direction` is off by default so movement stays level and you can look
 down at your body while flying sideways. `Max distance from body` leashes the camera
-(0 is unlimited — past the loaded chunks there is nothing to see). `Snap back on damage`
+(0 is unlimited — past the loaded chunks there is nothing to see).
+
+`See the whole render distance` is on by default. While you are flying it drops the
+three things that hide terrain you have already loaded: distance fog, the atmospheric
+haze, and chunk occlusion culling — which vanilla builds from where the camera is, so
+with the camera somewhere else it hides most of what you flew out to look at. Inside
+your selected render distance nothing is held back. It does not reach past that
+distance: chunks the client has never been sent are still not there to draw, which is
+what `Max distance from body` is for.
+
+`Snap back on damage`
 is on by default, so a mob or a lava pocket drops you back into your body rather than
 letting you die watching scenery.
 
 ### Fast Anchor
-Charges a respawn anchor the moment you place one, then puts a totem back in your hand.
+Takes the hotbar work out of setting up a respawn anchor.
 
-Placement is confirmed by looking for the block rather than assuming it landed, so a
-cancelled placement does nothing. One glowstone charge is enough to make the anchor
-explode; `Swap to` chooses what ends up in your hand afterwards (totem, another anchor,
-glowstone, or the slot you started on). `Only where anchors explode` skips the Nether,
-where an anchor sets your spawn instead.
+**Assist is the default mode.** Place an anchor and glowstone goes into your hand; you
+charge it yourself; your first fill swaps you to a totem. The mod sends no interaction
+at all in this mode — two hotbar changes around a click you made, and nothing else.
+`Wait for your fill` (200 ticks) is how long it keeps watching before it gives up.
+
+`Auto Charge` is the older behaviour: the anchor is charged for you the moment it
+lands, then the swap happens. Faster, but every charge is a use packet the mod sent.
+`Glowstone charges` and `Charge delay` apply to this mode only.
+
+Either way placement is confirmed by looking for the block rather than assuming it
+landed, so a cancelled placement does nothing. `Swap to` chooses what ends up in your
+hand afterwards (totem, another anchor, glowstone, or the slot you started on).
+`Only where anchors explode` skips the Nether, where an anchor sets your spawn instead.
 
 The mod never detonates the anchor — that is still your click.
+
+### Auto Crystal
+Places an end crystal on whatever obsidian your crosshair is resting on, whatever is in
+your hand.
+
+The point is not having to hold a crystal out. Look at obsidian with a sword in hand and
+crystals still go down. With a crystal in the offhand that costs **nothing at all** in
+hotbar terms — the placement goes through the offhand and your main hand is never
+touched. Otherwise the crystal's hotbar slot is borrowed for the placement and the sword
+comes straight back.
+
+Whether a crystal actually fits is worked out client-side first, using the same three
+tests vanilla makes — obsidian or bedrock underneath, air directly above, and nothing
+standing in the two blocks the crystal occupies — so a placement the server would refuse
+is never sent. A freshly placed crystal fails the third test itself, which is what stops
+the module stacking placements on one spot.
+
+Notable settings: `Only while the use key is held` (off by default, so it places on
+hover), `Cooldown` (4 ticks), `Max range`, `Allow bedrock`, and `Swap back`.
 
 ## Packet behaviour
 
@@ -179,6 +226,7 @@ Defaults sit on the numeric keypad, which vanilla leaves unbound. Rebind them in
 | `Keypad 6` | Toggle Free Cam |
 | `Keypad 7` | Toggle ESP |
 | `Keypad 8` | Toggle Tracer |
+| `Keypad 9` | Toggle Auto Crystal |
 
 Toggling writes straight to the config file, so hotkeys and the settings screen always
 agree.
